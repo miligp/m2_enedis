@@ -8,7 +8,7 @@ Objectifs :
 
 Analyser les caractéristiques des bâtiments (année de construction, superficie, etc.) et leurs performances énergétiques (DPE) afin d’identifier les facteurs influençant la consommation d’énergie.
 
-2 . Modèle de prédiction de la classe énergétique (DPE) :
+2. Modèle de prédiction de la classe énergétique (DPE) :
 
 Concevoir un modèle permettant de prédire la classe énergétique d’un bâtiment (A, B, C, D, E ou F) en fonction de ses caractéristiques.
 
