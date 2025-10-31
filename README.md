@@ -38,4 +38,38 @@ Marche à suivre
 6. Suivre le lien :
 
 
-USAGE
+UTILISATION
+
+Une fois installée, l'application est prête à l'emploi. Ses principales fonctionnalités sont :
+
+- Prédiction de la consommation énergétique : Saisissez les caractéristiques d'un bâtiment pour prédire sa consommation énergétique grâce aux modèles d'apprentissage automatique pré-entraînés.
+
+- Prédiction du DPE : Prédiser le diagnostic de performance énergétique (DPE) d'un bâtiment.
+
+- Carte interactive : Visualiser et explorer les données relatives aux bâtiments et à leurs profils énergétiques sur une carte du département du Rhône (69).
+
+- Graphiques et tableaux : Explorer différentes informations grâce à des graphiques et tableaux interactifs.
+
+PACKAGES 
+
+La liste des packages est disponible dans le fichier requirements.txt et inclut des bibliothèques telles que :
+
+- Streamlit : pour la création d’applications web interactives.
+
+- Plotly : pour la création de graphiques et de tracés interactifs.
+
+- Scikit-learn : pour les modèles d’apprentissage automatique.
+
+- Pandas, NumPy : pour la manipulation et le traitement des données. 
+
+Pour installer les dépendances, il suffit d’exécuter la commande suivante :
+
+MODELES
+
+Vous pouvez les télécharger à partir du lien suivant et les placer dans le répertoire :
+
+
+DOCUMENTATION
+
+lien vers la doc technique
+
