@@ -1,49 +1,8 @@
 import os
 import base64
-import requests
-import zipfile
 import streamlit as st
 from streamlit_option_menu import option_menu
 from views import contexte, analyse, cartographie, prediction, apropos
-
-def check_and_download_data():
-    """Vérifie et télécharge les données si nécessaire"""
-    # Vérifie si les données existent déjà
-    data_dir = "/app/data"
-    if os.path.exists(data_dir) and any(fname.endswith('.csv') for fname in os.listdir(data_dir)):
-        return  # Les données existent déjà
-    
-    url = os.environ.get("CSV_DOWNLOAD_URL")
-    if not url:
-        st.warning("Données manquantes et CSV_DOWNLOAD_URL non configuré")
-        return
-    
-    try:
-        with st.spinner("Téléchargement des données depuis Google Drive..."):
-            # Créer le dossier data s'il n'existe pas
-            os.makedirs(data_dir, exist_ok=True)
-            
-            # Téléchargement
-            response = requests.get(url, stream=True)
-            response.raise_for_status()
-            
-            zip_path = os.path.join(data_dir, "dataset.zip")
-            with open(zip_path, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
-            
-            # Extraction
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(data_dir)
-            
-            # Nettoyage
-            os.remove(zip_path)
-            
-            st.success("Données téléchargées et extraites avec succès!")
-            
-    except Exception as e:
-        st.error(f"Erreur lors du téléchargement: {e}")
 
 # Configuration générale 
 st.set_page_config(
@@ -51,8 +10,6 @@ st.set_page_config(
     page_icon="img/logo.png",
     layout="wide",
 )
-
-# Masquer les éléments par défaut de Streamlit
 st.markdown("""
     <style>
     #MainMenu, header, footer {visibility: hidden;}
@@ -165,12 +122,9 @@ st.markdown(
 
 # Pied de page 
 st.sidebar.markdown(
-    "<div class='footer'>Miléna, Marvin & Mazilda's Dashboard</div>",
+    "<div class='footer'>Miléna, Marvin & Mazilda’s Dashboard</div>",
     unsafe_allow_html=True
 )
-
-# Appeler la fonction de téléchargement des données après la configuration de l'interface
-check_and_download_data()
 
 # Affichage dynamique des pages 
 if selected == "Contexte":
