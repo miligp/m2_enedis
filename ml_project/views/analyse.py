@@ -9,26 +9,70 @@ from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 import io
+import requests # <-- NOUVEAU : Pour le téléchargement HTTP
 
 # Constantes pour le chemin de données
-DATA_FILENAME = "df_logement.csv"
+DATA_FILENAME = "df_logement_sample_250k.csv" # Nom du fichier lourd sur le Drive
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_PATH = os.path.join(CURRENT_DIR, '..', 'Data', DATA_FILENAME)
+
+# NOUVEAU : Chemins et Variables d'environnement
+# Lecture de la variable d'environnement qui contient l'URL de téléchargement Drive
+CSV_DOWNLOAD_URL = os.environ.get("https://drive.google.com/file/d/1mskVr6nmrH7R-NvQrOU2zKsi5gN5xmFF/view?usp=sharing")
+# Le fichier sera sauvegardé localement dans le dossier Data
+LOCAL_CSV_PATH = os.path.join(CURRENT_DIR, '..', 'Data', DATA_FILENAME) # Chemin de destination
 
 # Taille de l'échantillon pour les analyses (plus grand que le contexte)
 N_SAMPLE_ANALYSE = 50000
 
 # Seuil de nettoyage des outliers (max réaliste pour la consommation annuelle en kWh)
-# Les logements individuels sont rarement au-dessus de 50 000 kWh/an.
-# Nous fixons un seuil élevé pour garder les immeubles/gros consommateurs sans les erreurs de saisie.
-MAX_CONSO_THRESHOLD = 30000 # 5 millions kWh/an comme seuil max de sécurité
+MAX_CONSO_THRESHOLD = 30000 
+
+def download_csv(url, local_path):
+    """Télécharge le CSV lourd depuis l'URL Drive."""
+    if not url:
+        st.error("ERREUR: La variable d'environnement CSV_DOWNLOAD_URL est vide. Assurez-vous de la configurer sur la plateforme d'hébergement.")
+        return pd.DataFrame() # Retourne vide pour éviter un crash
+    
+    # Créer le répertoire Data s'il n'existe pas
+    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+    
+    # Vérification pour Streamlit: Si le fichier est déjà là, on évite de le télécharger à nouveau.
+    if os.path.exists(local_path):
+        print(f"Fichier CSV déjà présent localement: {local_path}. Chargement direct.")
+        return True
+
+    st.info(f"Téléchargement du fichier de données ({DATA_FILENAME}) en cours...")
+    try:
+        # Utilisation de requests pour récupérer le fichier
+        r = requests.get(url, stream=True, timeout=600) # 10 minutes de timeout pour 600k Ko
+        r.raise_for_status() # Lève une exception pour les statuts 4xx ou 5xx (Problème de lien/permissions Drive)
+
+        with open(local_path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+        
+        st.success("Téléchargement du CSV terminé avec succès.")
+        return True
+        
+    except requests.exceptions.RequestException as e:
+        st.error(f"ERREUR LORS DU TÉLÉCHARGEMENT du CSV: {e}. Vérifiez l'URL de téléchargement direct et les permissions Drive.")
+        return False
+    except Exception as e:
+        st.error(f"ERREUR inattendue: {e}")
+        return False
+
 
 @st.cache_data
 def load_data_and_preprocess():
     """Charge le fichier de données sécurisé, prend un échantillon stratifié et applique les renommages/simulations nécessaires."""
+    
+    # 1. TÉLÉCHARGEMENT
+    if not download_csv(CSV_DOWNLOAD_URL, LOCAL_CSV_PATH):
+        return pd.DataFrame() 
+
     try:
-        # Charger le fichier de données
-        df = pd.read_csv(CSV_PATH, sep=';', low_memory=False)
+        # 2. CHARGEMENT LOCAL (après téléchargement)
+        df = pd.read_csv(LOCAL_CSV_PATH, sep=';', low_memory=False)
         df.columns = df.columns.str.strip()
 
         # --- RENOMMAGE SÉCURISÉ DES COLONNES CRITIQUES (Correction de l'erreur) ---
@@ -105,7 +149,8 @@ def load_data_and_preprocess():
         return df
     
     except FileNotFoundError:
-        st.error(f"Fichier de données non trouvé. Veuillez vérifier le chemin : {CSV_PATH}")
+        # Cette erreur indique que le téléchargement n'a pas réussi à enregistrer le fichier
+        st.error(f"Fichier de données non trouvé localement après téléchargement : {LOCAL_CSV_PATH}")
         return pd.DataFrame()
     except Exception as e:
         st.error(f"Erreur lors du chargement des données ou de l'application des mappings : {e}")
@@ -115,8 +160,11 @@ def load_data_and_preprocess():
 def show_page():
     
     logo_path = os.path.join(os.path.dirname(__file__), "..", "img", "Logo.png")
-    with open(logo_path, "rb") as f:
-        logo_base64 = base64.b64encode(f.read()).decode()
+    try:
+        with open(logo_path, "rb") as f:
+            logo_base64 = base64.b64encode(f.read()).decode()
+    except FileNotFoundError:
+        logo_base64 = "" # Gérer l'absence du logo en développement
 
     st.markdown(
         f"""

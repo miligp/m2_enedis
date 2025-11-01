@@ -5,20 +5,67 @@ import os
 import folium
 from folium.plugins import MarkerCluster
 import streamlit.components.v1 as components # Pour l'affichage de la carte Folium
+import requests # <-- AJOUTÉ : Pour le téléchargement HTTP
 
 # Constantes pour le chemin de données
-DATA_FILENAME = "df_logement.csv"
+DATA_FILENAME = "df_logement_sample_250k.csv" # Nom du fichier lourd sur le Drive
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_PATH = os.path.join(CURRENT_DIR, '..', 'Data', DATA_FILENAME)
+
+# NOUVEAU : Chemins et Variables d'environnement
+# Lecture de la variable d'environnement qui contient l'URL de téléchargement Drive
+CSV_DOWNLOAD_URL = os.environ.get("https://drive.google.com/file/d/1mskVr6nmrH7R-NvQrOU2zKsi5gN5xmFF/view?usp=sharing")
+# Le fichier sera sauvegardé localement dans le dossier Data du conteneur
+LOCAL_CSV_PATH = os.path.join(CURRENT_DIR, '..', 'Data', DATA_FILENAME)
 
 # Taille maximale pour la cartographie
 N_MAX_POINTS = 50000 
 
+def download_csv(url, local_path):
+    """Télécharge le CSV lourd depuis l'URL Drive."""
+    if not url:
+        st.error("ERREUR: La variable d'environnement CSV_DOWNLOAD_URL est vide. Assurez-vous de la configurer sur la plateforme d'hébergement.")
+        return False
+    
+    # Créer le répertoire Data s'il n'existe pas
+    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+    
+    # Vérification pour Streamlit: Si le fichier est déjà là (suite à un premier chargement), on évite de le télécharger à nouveau.
+    if os.path.exists(local_path):
+        print(f"Fichier CSV déjà présent localement: {local_path}. Chargement direct.")
+        return True
+
+    st.info(f"Téléchargement du fichier de données ({DATA_FILENAME}) en cours...")
+    try:
+        # Utilisation de requests pour récupérer le fichier
+        r = requests.get(url, stream=True, timeout=600) # 10 minutes de timeout pour 600k Ko
+        r.raise_for_status() # Lève une exception pour les statuts 4xx ou 5xx (Problème de lien/permissions Drive)
+
+        with open(local_path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+        
+        st.success("Téléchargement du CSV terminé avec succès.")
+        return True
+        
+    except requests.exceptions.RequestException as e:
+        st.error(f"ERREUR LORS DU TÉLÉCHARGEMENT du CSV: {e}. Vérifiez l'URL de téléchargement direct et les permissions Drive.")
+        return False
+    except Exception as e:
+        st.error(f"ERREUR inattendue: {e}")
+        return False
+
+
 @st.cache_data
 def load_data():
     """Charge le fichier de données simulé, prend un échantillon et applique les prétraitements/simulations nécessaires."""
+    
+    # 1. TÉLÉCHARGEMENT
+    if not download_csv(CSV_DOWNLOAD_URL, LOCAL_CSV_PATH):
+        return pd.DataFrame() 
+        
     try:
-        df = pd.read_csv(CSV_PATH, sep=';', low_memory=False)
+        # 2. CHARGEMENT LOCAL (après téléchargement)
+        df = pd.read_csv(LOCAL_CSV_PATH, sep=';', low_memory=False)
         df.columns = df.columns.str.strip() 
 
         # --- RENOMMAGE SÉCURISÉ DES COLONNES CRITIQUES ---
@@ -70,7 +117,7 @@ def load_data():
         return df.dropna(subset=['latitude', 'longitude', 'classe_dpe']).copy()
 
     except FileNotFoundError:
-        st.error(f"Fichier de données non trouvé. Veuillez vérifier le chemin : {CSV_PATH}")
+        st.error(f"Fichier de données non trouvé localement après téléchargement : {LOCAL_CSV_PATH}")
         return pd.DataFrame()
     except Exception as e:
         st.error(f"Erreur lors du chargement des données ou de l'application des mappings : {e}")
