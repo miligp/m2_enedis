@@ -45,15 +45,14 @@ def check_and_download_data():
     except Exception as e:
         st.error(f"Erreur lors du téléchargement: {e}")
 
-# Appelez la fonction au début de votre app
-check_and_download_data()
-
 # Configuration générale 
 st.set_page_config(
     page_title="EcoScan Dashboard",
     page_icon="img/logo.png",
     layout="wide",
 )
+
+# Masquer les éléments par défaut de Streamlit
 st.markdown("""
     <style>
     #MainMenu, header, footer {visibility: hidden;}
@@ -169,6 +168,9 @@ st.sidebar.markdown(
     "<div class='footer'>Miléna, Marvin & Mazilda's Dashboard</div>",
     unsafe_allow_html=True
 )
+
+# Appeler la fonction de téléchargement des données après la configuration de l'interface
+check_and_download_data()
 
 # Affichage dynamique des pages 
 if selected == "Contexte":
