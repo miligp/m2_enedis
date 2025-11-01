@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+.venv/
+
+# Data files
+data/
+*.xlsx
+*.xls
+*.parquet
+
+# Models
+models/
+*.joblib
+*.pkl
+*.h5
+*.pt
+*.pth
+*.onnx
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Streamlit
+.streamlit/
+cache/
+
+# Logs
+*.log
+
+# System
+.DS_Store
+Thumbs.db
