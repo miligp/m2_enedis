@@ -1,0 +1,31 @@
+Classe_predite,Conso_estimee_kWh,CO2_estime_kg,surface_habitable_logement,periode_construction,type_energie_n1,type_energie_principale_chauffage,qualite_isolation_murs,hauteur_sous_plafond,nombre_appartement_cat,logement
+C,191.4,47.9,80.0,2001-2005,Gaz naturel ,Gaz naturel ,Insuffisante,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,194.6,48.6,80.0,2001-2005,Gaz naturel ,Gaz naturel ,Insuffisante,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,262.5,65.6,45.0,2001-2005,Gaz naturel ,Bois et biomasse,bonne,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,189.5,47.4,45.0,2001-2005,Bois et biomasse,Bois et biomasse,bonne,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,206.2,51.5,45.0,2001-2005,Bois et biomasse,Bois et biomasse,bonne,2.5,Petit Collectif(4 à 9 logements),Neuf
+E,116.9,29.2,40.0,avant 1948,Gaz (GPL/Propane/Butane),Gaz (GPL/Propane/Butane),Insuffisante,2.5,Maison(Unitaire ou 2 à 3 logements),Ancien
+C,220.4,55.1,60.0,après 2021,Gaz naturel ,Gaz naturel ,très bonne,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,131.3,32.8,60.0,après 2021,Gaz naturel ,Électricité,très bonne,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,166.0,41.5,60.0,après 2021,Gaz naturel ,Charbon,très bonne,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,193.6,48.4,60.0,après 2021,Charbon,Charbon,très bonne,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,244.9,61.2,60.0,après 2021,Gaz naturel ,Gaz naturel ,très bonne,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,222.7,55.7,60.0,après 2021,Électricité,Électricité,très bonne,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,197.8,49.5,130.0,après 2021,Électricité,Électricité,très bonne,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,154.3,38.6,185.0,après 2021,Électricité,Électricité,très bonne,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,161.2,40.3,185.0,après 2021,Électricité,Électricité,très bonne,2.5,Maison(Unitaire ou 2 à 3 logements),Ancien
+E,182.8,45.7,80.0,avant 1948,Gaz naturel ,Gaz naturel ,Insuffisante,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,206.4,51.6,80.0,après 2021,Électricité,Électricité,très bonne,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+B,127.0,31.8,100.0,après 2021,Électricité,Électricité,très bonne,3.0000000000000004,Maison(Unitaire ou 2 à 3 logements),Neuf
+B,242.0,60.5,100.0,après 2021,Électricité,Électricité,très bonne,3.0000000000000004,Maison(Unitaire ou 2 à 3 logements),Neuf
+E,165.7,41.4,80.0,avant 1948,Gaz naturel ,Gaz naturel ,Insuffisante,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+E,173.0,43.2,80.0,avant 1948,Gaz naturel ,Gaz naturel ,Insuffisante,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+E,15964.5,3991.1,80.0,avant 1948,Gaz naturel ,Gaz naturel ,Insuffisante,2.5,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,4375.2,1093.8,100.0,après 2021,Électricité,Électricité,très bonne,3.0000000000000004,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,10135.9,2534.0,100.0,après 2021,Gaz naturel ,Gaz naturel ,très bonne,3.0000000000000004,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,10135.9,2534.0,100.0,après 2021,Réseau de chauffage urbain,Réseau de chauffage urbain,très bonne,3.0000000000000004,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,10135.9,2534.0,100.0,après 2021,Bois et biomasse,Bois et biomasse,très bonne,3.0000000000000004,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,4375.2,1093.8,100.0,après 2021,Électricité,Électricité,très bonne,3.0000000000000004,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,9530.0,2382.5,100.0,après 2021,Gaz naturel ,Électricité,très bonne,3.0000000000000004,Maison(Unitaire ou 2 à 3 logements),Neuf
+C,10784.0,2696.0,110.0,après 2021,Gaz naturel ,Électricité,très bonne,3.0000000000000004,Maison(Unitaire ou 2 à 3 logements),Neuf
+D,14621.6,3655.4,110.0,après 2021,Gaz naturel ,Électricité,Moyenne,3.0000000000000004,Maison(Unitaire ou 2 à 3 logements),Neuf
