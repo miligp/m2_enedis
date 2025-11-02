@@ -422,7 +422,12 @@ Nous avons choisi une interface de type Streamlit qui se constitue de :
 
 ## 4. Améliorations et Perspectives Futures
 
-Pour renforcer encore la performance et l'utilité de notre plateforme de prédiction énergétique, plusieurs axes d'amélioration sont envisagés. L'enrichissement des données constituera une priorité, avec l'intégration de nouvelles variables issues de données ouvertes telles que les données météorologiques (température, climat), le type de chauffage ou l'isolation des bâtiments, permettant d'affiner la précision des modèles. Un système de mise à jour automatique via des APIs externes assurera l'actualisation en temps réel des visualisations et des données utilisées. Sur le plan technique, l'implémentation de techniques avancées de nettoyage et de rééquilibrage des données (SMOTE) améliorera la robustesse des modèles, tandis qu'un processus de réentraînement automatique sera mis en place pour maintenir leur performance face aux nouvelles données. Enfin, le déploiement public de la plateforme facilitera l'accès et le partage des résultats, et l'expérience utilisateur sera optimisée via une refonte de l'interface de prédiction pour un fonctionnement fluide en environnement de production, ouvrant la voie à des modèles plus sophistiqués et à une adoption élargie.
+Pour renforcer encore la performance et l'utilité de notre plateforme de prédiction énergétique, plusieurs axes d'amélioration sont envisagés. 
+* L'enrichissement des données constituera une priorité, avec l'intégration de nouvelles variables issues de données ouvertes telles que les données météorologiques (température, climat).
+* Un système de mise à jour automatique via des APIs externes assurera l'actualisation en temps réel des visualisations et des données utilisées.
+*  Sur le plan technique :
+*  l'implémentation de techniques avancées de nettoyage et de rééquilibrage des données (SMOTE) améliorera la robustesse des modèles, tandis qu'un processus de réentraînement automatique sera mis en place pour maintenir leur performance face aux nouvelles données.
+*  Enfin, le déploiement public de la plateforme facilitera l'accès et le partage des résultats, et l'expérience utilisateur sera optimisée via une refonte de l'interface de prédiction pour un fonctionnement fluide en environnement de production, ouvrant la voie à des modèles plus sophistiqués et à une adoption élargie.
 
 
 
