@@ -27,7 +27,14 @@ L'installation requiert :
 
 1. Lancer l'application :
 
-2. Fichier Docker : [Dockerfile](https://github.com/miligp/m2_enedis/blob/main/ml_project/Dockerfile)
+2. Docker :
+```bash
+docker pull miligp12/ml-project-streamlit:latest
+```
+et lancer : 
+```bash
+docker run -d -p 8501:8501 miligp12/ml-project-streamlit:latest
+```
 
 Pour des informations complémentaires, vous référez à la rubrique Documentation plus bas.
 
