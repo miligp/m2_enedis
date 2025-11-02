@@ -325,7 +325,9 @@ Rapport de classification :
  weighted avg       0.78      0.74      0.75    208614
 ```
 
-Le modèle obtenu est satisfaisant avec un F1-Score moyen égal à 0.75, que nous comparerons à la régression logistique effectuée ci-après.
+Le modèle obtenu est satisfaisant avec un F1-Score moyen égal à 0.75, la matrice de confusion correspondante se trouve ci-après.
+
+![jpeg](mat_confusion.jpeg)
 
 #### 2. Régression logistique
 
