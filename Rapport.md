@@ -250,6 +250,13 @@ Nous avons commencé par chercher la meilleure valeur du coefficient de régular
 
 #### 1. Random Forest
 
+#### Démarche 
+Etant donné la taille des donnés, nous avons fait le choix d'un premier modèle Random Forest .
+* Nous nous sommes d'abord intéressés aux hyperparamètres en croisant avec un GridSearch 
+* Nous avons ensuite généré des échantillons, balencés et stratifié sur la variable 'etiquette_dpe' afin de s'affranchir du traitement des données dans leur intégralité.
+* Une fois les meilleurs paramètres déterminés, le modèle a tournée 10 fois pour tester sa stabilité.
+* Du fait d'un grand déséquilibre dans la distribution de la variable, les métriques Precision et Rappel étaient très importantes (environ égales à 99%). Le F1-score, étant une moyenne harmonique de ces deux métriques, a donc été privilégié.
+
 Nous avons commencé par déterminer les meilleurs paramètres ('n_estimators': [100, 150, 200],'max_depth': [5, 10, None],'min_samples_split': [2, 5, 10]) à l'aide RandomizedSearchCV pour un échantillon de taille 50000 puis le test a été effectué sur l'échantillon complet.
 
 
@@ -369,4 +376,42 @@ Nous n'avons pas eu le temps de les mettre en oeuvre mais avons néanmoins réfl
  * le rééchantillonage : utiliser SMOTE afin de générer des échantillons permettant d'équilibrer la distribution.
  * la pondération : pondérer favorablement les classes correspondant aux étiquettes A,B,F et G.
 
+
+### Préparation pour la suite du projet
+
+#### Taille des fichiers de sérialisation
+
+Nous avons ensuite enregistré les modèles au format Joblib (moins volumineux que Pickle). Cependant le fichier demeurait trop volumineux pour l'exporter dans GIT. 
+Il a alors fallut trouver un compromis entre un bon F1-Score et une taille de fichier raisonnable en influant sur les différents paramètres du modèles. 
+Nous avons finalement obtenu un fichier de 300Mo (contre 1000Mo au départ).
+
+
+#### API
+
+Les deux API (une pour chaque modèle) s'ouvrent sur deux localhost différent (5000 et 5001), et streamlit  s'ouvre sur une autre adresse. Ce qui crée trois conteneurs, qui ne communiquait pas entre eux. Nous avons donc centralisé la logique d'appel aux APIs des modèles dans le fichier api_manager.py.Ce module est le seul endroit qui connaît les adresses internes de nos services d'API.
+Ce qui a permis de créer l'image docker.
+
+#### Image Docker
+* L'image Docker, elle aussi importante, n'était pas exportable vers GIT. L'idée a alors été de la stocker dans un drive, de sorte que lors de l'appel de app.py on charge le fichier pour qu'il soit dans le dossier ml_projet, seulement lorsqu'on le lance :  [Lien](https://drive.google.com/drive/folders/1ch2Ax0kroekZBe-_l1MF0wvHc-wZcgXd)
+* Le déploiement a présenté le même problème que la connection aux API. En effet, StreamlitCloud ne gère pas les 3 différentes API et nous n'avons pas réussi à trouver de solution, faute de temps (API Manger aurait peut-être pu apporter une solution).
+* Finalement, le site est déployé mais il n'est pas possible de faire focntionner la prédiction.
+
+ 
+
 ##  3. Interface 
+Nous avons choisi une interface de type Streamlit qui se constitue de :
+* une page de présentation rapide des données, 
+* une analyse de certain KPi importants  (on peut s'apercevoir à quel point les  données ne sont pas très bien distribuées : beacoup d'étiquettes C, D et E)
+* des graphes sur les consommations (trop correlés avec les étiquettes ou pas assez avec le type de logement par exemple) 
+* une carte : nous avons essayé d'utiliser un nombre suffisant de données, ce qui génére une certaine lenteur de l'affichage sous forme de cluster en fonction du zoom. 
+* une page contenant les prédictions se base sur nos API de modèle, l'un ce sert de la prediction de l'autre. API dpe commence
+* l'historique dess recherches
+
+
+
+
+
+
+
+
+
