@@ -79,9 +79,9 @@ Vous pouvez vous référer au document ce trouvant sur ce lien : [documentation]
 
 # 📋 Cahiers des Charges
 
-## Évaluation 1 - Cahier des charges 1/2
+##  Cahier des charges 1/2
 ![Spécifications fonctionnelles et techniques - Partie 1](./Eval1.jpg)
 
-## Évaluation 2 - Cahier des charges 2/2  
+##  Cahier des charges 2/2  
 ![Pack Standard, Intermédiaire et Expert - Partie 2](./Eval2.jpg)
 
