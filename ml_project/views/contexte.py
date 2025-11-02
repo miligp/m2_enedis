@@ -7,81 +7,76 @@ import numpy as np
 import datetime as dt
 
 # Constantes pour le chemin de données
-DATA_FILENAME = "df_logement.csv"
+DATA_FILENAME = "df_logements.parquet"
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_PATH = os.path.join(CURRENT_DIR, '..', 'Data', DATA_FILENAME)
+
+# Chemin corrigé
+LOCAL_PARQUET_PATH = os.path.join(CURRENT_DIR, '..', 'Data', DATA_FILENAME)
 
 # Taille de l'échantillon pour la rapidité
-N_SAMPLE = 10000 
+N_SAMPLE = 10000
 
 @st.cache_data
 def load_data_and_stratify():
-    """Charge le fichier de données, applique le renommage, et effectue un échantillonnage stratifié."""
+    """Charge le fichier Parquet local et effectue un échantillonnage stratifié."""
+    
     try:
-        df = pd.read_csv(CSV_PATH, sep=';', low_memory=False)
-        df.columns = df.columns.str.strip() 
+        # Vérifier si le fichier existe
+        if not os.path.exists(LOCAL_PARQUET_PATH):
+            st.error(f"❌ Fichier non trouvé: {LOCAL_PARQUET_PATH}")
+            return None
+        
+        # CHARGEMENT du fichier Parquet
+        df = pd.read_parquet(LOCAL_PARQUET_PATH)
+        df.columns = df.columns.str.strip()
 
         # --- RENOMMAGE SÉCURISÉ DES COLONNES CRITIQUES ---
         RENAME_MAP = {
             'surface_habitable_logement': 'surface_m2',
             'conso_5_usages_ef': 'conso_energie_kwh',
             'etiquette_dpe': 'classe_dpe', 
-            'code_region_ban': 'region'
         }
         
-        # Appliquer le renommage uniquement si la colonne brute existe
+        # Appliquer le renommage uniquement si la colonne existe
         df.rename(columns={k: v for k, v in RENAME_MAP.items() if k in df.columns}, inplace=True)
         
-        # --- SÉCURISATION (Création de colonnes si manquantes après renommage) ---
+        # --- SÉCURISATION - Créer les colonnes si manquantes ---
         if 'classe_dpe' not in df.columns:
-            st.warning("Colonne 'classe_dpe' manquante. Simulation.")
             df['classe_dpe'] = np.random.choice(['A', 'B', 'C', 'D', 'E', 'F', 'G'], len(df))
             
         if 'conso_energie_kwh' not in df.columns:
-            st.warning("Colonne 'conso_energie_kwh' manquante. Simulation.")
             df['conso_energie_kwh'] = np.random.uniform(5000, 30000, len(df))
 
         if 'surface_m2' not in df.columns:
-             df['surface_m2'] = np.random.uniform(30, 150, len(df))
-             
-        if 'region' not in df.columns:
-             df['region'] = np.random.choice([f"Région {i}" for i in range(1, 6)], len(df))
-             
-        # --- ÉCHANTILLONNAGE STRATIFIÉ (par classe DPE) ---
+            df['surface_m2'] = np.random.uniform(30, 150, len(df))
+        
+        # --- ÉCHANTILLONNAGE STRATIFIÉ ---
         if len(df) > N_SAMPLE:
             class_counts = df['classe_dpe'].value_counts()
             sampling_ratio = N_SAMPLE / len(df)
             sample_sizes = (class_counts * sampling_ratio).round().astype(int)
-            sample_sizes[sample_sizes == 0] = 1 # Assurer un minimum de 1
+            sample_sizes[sample_sizes == 0] = 1
             
             df_sampled = df.groupby('classe_dpe', group_keys=False).apply(
                 lambda x: x.sample(n=min(len(x), sample_sizes[x.name]), random_state=42)
             ).reset_index(drop=True)
             
             df = df_sampled
-        # ----------------------------------------------------
-        
-        # Simuler la date DPE si manquante
-        if 'date_reception_dpe' not in df.columns:
-            df['date_reception_dpe'] = '2024-01-01'
 
+        st.success(f"✅ Données chargées: {len(df)} lignes")
         return df
 
-    except FileNotFoundError:
-        st.error(f"Fichier de données non trouvé. Veuillez vérifier le chemin : {CSV_PATH}")
-        return pd.DataFrame()
-    except pd.errors.ParserError:
-        st.error("Erreur de format de fichier. Le fichier CSV doit utiliser le point-virgule (;) comme séparateur.")
-        return pd.DataFrame()
     except Exception as e:
-        st.error(f"Erreur de chargement ou de pré-traitement des données : {e}")
-        return pd.DataFrame()
-
+        st.error(f"Erreur de chargement des données : {e}")
+        return None
 
 def show_page():
     
     df = load_data_and_stratify()
-    if df.empty:
+    
+    # CORRECTION : Vérifier si df est None ou empty
+    if df is None or df.empty:
+        st.error("❌ Impossible de charger les données")
         return
 
     logo_path = os.path.join(os.path.dirname(__file__), "..", "img", "Logo.png")
@@ -91,7 +86,6 @@ def show_page():
     except FileNotFoundError:
         logo_base64 = ""
 
-    # ... (le code d'affichage reste le même, utilisant df) ...
     st.markdown(
         f"""
         <div style='text-align:center; margin-top:-80px; margin-bottom:5px;'>
@@ -114,12 +108,12 @@ def show_page():
     st.markdown("""
     <div style='max-width: 900px; margin: auto; text-align: center;'>
         <h2 style='color:#2ecc71; font-size:32px; font-weight:1000; margin-bottom:10px;'>
-           --
+           Contexte du Projet
         </h2>
         <p style='font-size:20px; color:#dddddd; line-height:1.5;'>
-            Avec l’accélération du changement climatique et la hausse du coût de l’énergie,
+            Avec l'accélération du changement climatique et la hausse du coût de l'énergie,
             la <b>sobriété énergétique</b> est devenue un enjeu central.<br>
-            Enedis souhaite évaluer <b>l’impact de la classe DPE</b> (Diagnostic de Performance Énergétique)
+            Enedis souhaite évaluer <b>l'impact de la classe DPE</b> (Diagnostic de Performance Énergétique)
             sur la consommation électrique des logements.
         </p>
     </div>
@@ -134,11 +128,10 @@ def show_page():
         <ul style='list-style:none; padding-left:0; font-size:19px; color:#e6e6e6; line-height:1.9;'>
             <li style='margin-bottom:5px;'>• <b>Visualiser et explorer</b> les données du DPE</li>
             <li style='margin-bottom:5px;'>• <b>Analyser</b> les tendances énergétiques régionales</li>
-            <li>• <b>Prédire</b> la classe DPE et la consommation d’énergie d’un logement</li>
+            <li>• <b>Prédire</b> la classe DPE et la consommation d'énergie d'un logement</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
-
 
     # APERÇU DES DONNÉES + INDICATEURS CLÉS 
     st.markdown(
@@ -160,11 +153,28 @@ def show_page():
             "<h4 style='text-align:center; color:#e67e22; font-size:22px; font-weight:800;'>Indicateurs clés</h4>",
             unsafe_allow_html=True
         )
+        
+        # Calcul sécurisé des indicateurs
+        try:
+            surface_moyenne = f"{df['surface_m2'].mean():.1f}"
+        except:
+            surface_moyenne = "N/A"
+            
+        try:
+            conso_moyenne = f"{df['conso_energie_kwh'].mean():.1f}"
+        except:
+            conso_moyenne = "N/A"
+            
+        try:
+            classe_frequente = df['classe_dpe'].mode()[0] if not df['classe_dpe'].mode().empty else "N/A"
+        except:
+            classe_frequente = "N/A"
+
         indicateurs = [
-            ("NOMBRE LOGEMENTS (Est.)", f"{len(df):,}", "#2ecc71"),
-            ("SURFACE MOYENNE (m²)", f"{df['surface_m2'].mean():.1f}", "#f1c40f"),
-            ("CONSO MOYENNE (kWh)", f"{df['conso_energie_kwh'].mean():.1f}", "#e67e22"),
-            ("CLASSE DPE LA PLUS FREQUENTE", df['classe_dpe'].mode()[0], "#3498db"),
+            ("NOMBRE LOGEMENTS", f"{len(df):,}", "#2ecc71"),
+            ("SURFACE MOYENNE (m²)", surface_moyenne, "#f1c40f"),
+            ("CONSO MOYENNE (kWh)", conso_moyenne, "#e67e22"),
+            ("CLASSE DPE FRÉQUENTE", classe_frequente, "#3498db"),
         ]
 
         box_style = """
@@ -194,44 +204,41 @@ def show_page():
             else:
                 c2.markdown("")  
 
-
-
-    # RÉPARTITION DES CLASSES DPE & PAR RÉGION 
+    # RÉPARTITION DES CLASSES DPE
     st.markdown("""
     <h2 style='text-align:center; color:#1abc9c; font-size:28px; margin-top:60px;'>
-        REPARTITION DES CLASSES DPE
+        RÉPARTITION DES CLASSES DPE
     </h2>
     """, unsafe_allow_html=True)
 
-    # Données de base
-    class_counts = df['classe_dpe'].value_counts().sort_index().reset_index()
-    class_counts.columns = ["Classe DPE", "Nombre de logements"]
-
-    
-    # Graphique Répartition des classes DPE
-    fig1 = px.bar(
-        class_counts,
-        x="Classe DPE",
-        y="Nombre de logements",
-        text="Nombre de logements",
-        color="Classe DPE",
-        color_discrete_sequence=["#27ae60", "#2ecc71", "#f1c40f", "#f39c12", "#e67e22", "#e74c3c", "#c0392b"]
-    )
-    fig1.update_traces(textposition="outside")
-    fig1.update_layout(
-        title=dict(text="Répartition des classes DPE", x=0.5, font=dict(color="#2ecc71", size=18)),
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#ffffff"),
-        xaxis_title="Classe DPE",
-        yaxis_title="Nombre de logements",
-        margin=dict(l=20, r=20, t=50, b=40),
-        showlegend=False
-    )
-
-    st.plotly_chart(fig1, use_container_width=True)
-
-
+    # Données de base avec gestion d'erreur
+    try:
+        class_counts = df['classe_dpe'].value_counts().sort_index().reset_index()
+        class_counts.columns = ["Classe DPE", "Nombre de logements"]
+        
+        # Graphique Répartition des classes DPE
+        fig1 = px.bar(
+            class_counts,
+            x="Classe DPE",
+            y="Nombre de logements",
+            text="Nombre de logements",
+            color="Classe DPE",
+            color_discrete_sequence=["#27ae60", "#2ecc71", "#f1c40f", "#f39c12", "#e67e22", "#e74c3c", "#c0392b"]
+        )
+        fig1.update_traces(textposition="outside")
+        fig1.update_layout(
+            title=dict(text="Répartition des classes DPE", x=0.5, font=dict(color="#2ecc71", size=18)),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#ffffff"),
+            xaxis_title="Classe DPE",
+            yaxis_title="Nombre de logements",
+            margin=dict(l=20, r=20, t=50, b=40),
+            showlegend=False
+        )
+        st.plotly_chart(fig1, use_container_width=True)
+    except Exception as e:
+        st.error(f"Erreur lors de la création du graphique : {e}")
 
     # Date de mise à jour 
-    st.info(f"📅 Données mises à jour jusqu’au : **{dt.date.today()}**")
+    st.info(f"📅 Données mises à jour jusqu'au : **{dt.date.today()}**")

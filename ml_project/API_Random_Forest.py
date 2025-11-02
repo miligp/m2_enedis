@@ -5,11 +5,13 @@ import numpy as np
 from joblib import load
 import os 
 import pathlib 
+from file_loader import setup_heavy_files
 
 # -----------------------------
 # CONFIGURATION DES FICHIERS
 # -----------------------------
 
+setup_heavy_files()
 
 app_dpe = Flask(__name__)
 
@@ -114,4 +116,4 @@ def predict_dpe():
 
 if __name__ == '__main__':
     # Lancez cette API sur le port 5001
-    app_dpe.run(host='0.0.0.0', port=5001, debug=True)
+    app_dpe.run(host='0.0.0.0', port=5001, debug=False)

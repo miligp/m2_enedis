@@ -4,22 +4,24 @@ import numpy as np
 import os
 import folium
 from folium.plugins import MarkerCluster
-import streamlit.components.v1 as components # Pour l'affichage de la carte Folium
+import streamlit.components.v1 as components
 
 # Constantes pour le chemin de données
-DATA_FILENAME = "df_logement.csv"
+DATA_FILENAME = "df_logements.parquet"
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_PATH = os.path.join(CURRENT_DIR, '..', 'Data', DATA_FILENAME)
+LOCAL_PARQUET_PATH = os.path.join(CURRENT_DIR, '..', 'Data', DATA_FILENAME)
 
 # Taille maximale pour la cartographie
-N_MAX_POINTS = 50000 
+N_MAX_POINTS = 50000
 
 @st.cache_data
 def load_data():
-    """Charge le fichier de données simulé, prend un échantillon et applique les prétraitements/simulations nécessaires."""
+    """Charge le fichier Parquet local et applique les prétraitements."""
+    
     try:
-        df = pd.read_csv(CSV_PATH, sep=';', low_memory=False)
-        df.columns = df.columns.str.strip() 
+        # CHARGEMENT DIRECT du fichier Parquet local
+        df = pd.read_parquet(LOCAL_PARQUET_PATH)
+        df.columns = df.columns.str.strip()
 
         # --- RENOMMAGE SÉCURISÉ DES COLONNES CRITIQUES ---
         RENAME_MAP = {
@@ -28,28 +30,17 @@ def load_data():
         }
         df.rename(columns={k: v for k, v in RENAME_MAP.items() if k in df.columns}, inplace=True)
         
-        # --- ÉCHANTILLONNAGE (simple pour la cartographie) ---
+        # --- ÉCHANTILLONNAGE ---
         if len(df) > N_MAX_POINTS:
             df = df.sample(n=N_MAX_POINTS, random_state=42)
-        # ----------------------------------------------------
 
-        # --- SÉCURISATION (Création de colonnes si manquantes après renommage) ---
+        # --- SÉCURISATION SI COLONNES MANQUANTES ---
         rng = np.random.default_rng(42)
         
-        if 'classe_dpe' not in df.columns:
-            df['classe_dpe'] = np.random.choice(['A', 'B', 'C', 'D', 'E', 'F', 'G'], len(df))
-            
-        if 'conso_energie_kwh' not in df.columns:
-            df['conso_energie_kwh'] = np.random.uniform(5000, 30000, len(df))
-            
         if "latitude" not in df.columns or "longitude" not in df.columns:
-            # Simuler des coordonnées dans une zone générale (Lyon, par exemple)
             df["latitude"] = 45.75 + rng.random(len(df)) * 0.2     
             df["longitude"] = 4.83 + rng.random(len(df)) * 0.2
         
-        if 'co2_emission' not in df.columns:
-             df['co2_emission'] = (df['conso_energie_kwh'] * 0.25).clip(lower=0).round(1)
-
         if "periode_construction" not in df.columns:
             df["periode_construction"] = np.random.choice(
                 ["Avant 1960", "1960-1979", "1980-1999", "2000-2009", "2010+"],
@@ -63,19 +54,18 @@ def load_data():
         }
         df["color"] = df["classe_dpe"].map(colors_map)
         
-        # Créer le tooltip pour Folium (une seule colonne)
+        # Créer le tooltip pour Folium
         df['tooltip_info'] = 'Classe DPE: ' + df['classe_dpe'].astype(str) + '<br>' + \
                              'Conso (kWh/an): ' + df['conso_energie_kwh'].fillna('N/A').astype(str)
         
         return df.dropna(subset=['latitude', 'longitude', 'classe_dpe']).copy()
 
     except FileNotFoundError:
-        st.error(f"Fichier de données non trouvé. Veuillez vérifier le chemin : {CSV_PATH}")
+        st.error(f"Fichier de données non trouvé : {LOCAL_PARQUET_PATH}")
         return pd.DataFrame()
     except Exception as e:
-        st.error(f"Erreur lors du chargement des données ou de l'application des mappings : {e}")
+        st.error(f"Erreur lors du chargement des données : {e}")
         return pd.DataFrame()
-
 
 def show_page():
     st.markdown("""

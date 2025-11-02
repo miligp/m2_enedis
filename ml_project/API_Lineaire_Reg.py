@@ -4,8 +4,9 @@ import pandas as pd
 import numpy as np
 import os
 import pathlib
+from file_loader import setup_heavy_files
 
-
+setup_heavy_files()
 
 # Variables numériques à standardiser
 Variable_Standardisee = ['hauteur_sous_plafond', 'surface_habitable_logement']
@@ -178,4 +179,4 @@ def predict_conso():
 
 if __name__ == '__main__':
     # Lancez cette API sur le port 5000
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)

@@ -1,0 +1,31 @@
+services:
+  # API Random Forest (Port 5001)
+  api-forest:
+    build: .
+    container_name: api-forest
+    ports:
+      - "5001:5001"
+    command: ["python", "API_Random_Forest.py"]
+    environment:
+      - PORT=5001
+
+  # API Linear Regression (Port 5000)
+  api-linear:
+    build: .
+    container_name: api-linear
+    ports:
+      - "5000:5000"
+    command: ["python", "API_Lineaire_Reg.py"]
+    environment:
+      - PORT=5000
+
+  # Application Streamlit (Port 8501)
+  streamlit-app:
+    build: .
+    container_name: streamlit-app
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api-forest
+      - api-linear
+    command: ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
