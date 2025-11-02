@@ -3,10 +3,29 @@ import base64
 import streamlit as st
 from streamlit_option_menu import option_menu
 from views import contexte, analyse, cartographie, prediction, apropos
-from file_loader import setup_heavy_files  # ✅ AJOUT IMPORT
+from file_loader import setup_heavy_files
+from api_manager import start_apis, stop_apis, monitor_apis
+import time
 
-# ✅ AJOUT: Télécharge les fichiers lourds au démarrage
-setup_heavy_files()
+# ✅ Démarrer les fichiers lourds et les APIs automatiquement
+if 'initialized' not in st.session_state:
+    print("🚀 Initialisation de l'application...")
+    
+    # 1. Télécharger les fichiers lourds
+    setup_heavy_files()
+    
+    # 2. Démarrer les APIs
+    st.session_state.api_processes = start_apis()
+    
+    # 3. Attendre un peu pour que les APIs aient le temps de charger
+    print("⏳ Attente du chargement des modèles...")
+    time.sleep(10)
+    
+    # 4. Démarrer la surveillance des APIs
+    monitor_apis()
+    
+    st.session_state.initialized = True
+    print("🎉 Application initialisée avec succès!")
 
 # Configuration générale 
 st.set_page_config(
@@ -14,6 +33,7 @@ st.set_page_config(
     page_icon="img/logo.png",
     layout="wide",
 )
+
 st.markdown("""
     <style>
     #MainMenu, header, footer {visibility: hidden;}
@@ -141,3 +161,11 @@ elif selected == "Prédiction":
     prediction.show_page()
 elif selected == "À propos":
     apropos.show_page()
+
+# Nettoyage à la fermeture (optionnel pour Streamlit Cloud)
+import atexit
+def cleanup():
+    if 'api_processes' in st.session_state:
+        stop_apis(st.session_state.api_processes)
+
+atexit.register(cleanup)

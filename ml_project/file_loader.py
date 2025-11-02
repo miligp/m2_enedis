@@ -2,7 +2,11 @@ import os
 import gdown
 
 FILE_MAPPING = {
-    'random_forest_dpe_final_weighted.joblib': 'https://drive.google.com/uc?id=1B41zmP2dw1UBBoWiMiKa1Brt95e2fgvR'
+    'random_forest_dpe_final_weighted.joblib': 'https://drive.google.com/uc?id=1B41zmP2dw1UBBoWiMiKa1Brt95e2fgvR',
+    'feature_columns_final.pkl': 'https://drive.google.com/uc?id=1VOTDSGpYq9JdHf8K7Q9Y9q4N9eXq9Y9X',  # ✅ AJOUT
+    'lr_model.pkl': 'https://drive.google.com/uc?id=1YOUR_MODEL_ID_HERE',  # ✅ AJOUT
+    'lr_imputer.pkl': 'https://drive.google.com/uc?id=1YOUR_IMPUTER_ID_HERE',  # ✅ AJOUT  
+    'lr_scaler.pkl': 'https://drive.google.com/uc?id=1YOUR_SCALER_ID_HERE',  # ✅ AJOUT
 }
 
 def setup_heavy_files():

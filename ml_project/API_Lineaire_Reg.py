@@ -6,7 +6,7 @@ import os
 import pathlib
 from file_loader import setup_heavy_files
 
-setup_heavy_files()
+print("Initialisation de l'API Consommation...")
 
 # Variables numériques à standardiser
 Variable_Standardisee = ['hauteur_sous_plafond', 'surface_habitable_logement']
@@ -43,8 +43,6 @@ Nombre_App_Mapping = {
     "Grand Collectif(> 30 logements)": 3
 }
 
-# Le reste des variables (énergie, type de bâtiment, logement) doit être traité comme OHE/Booléen (0/1)
-
 # ----------------------------------------------------
 # 2. INITIALISATION ET CHARGEMENT DES ASSETS
 # ----------------------------------------------------
@@ -64,17 +62,41 @@ lr_scaler = None
 def Verif_Chemin():
     global lr_model, lr_imputer, lr_scaler
     try:
+        print("Chargement du modèle de consommation...")
+        
+        # Vérifier si les fichiers existent
+        if not Model_PATH.exists():
+            print(f"Fichier modèle non trouvé: {Model_PATH}")
+            return
+            
+        if not Imput_PATH.exists():
+            print(f"Fichier imputer non trouvé: {Imput_PATH}")
+            return
+            
+        if not Scaler_PATH.exists():
+            print(f"Fichier scaler non trouvé: {Scaler_PATH}")
+            return
+        
+        # Charger les fichiers
         lr_model = joblib.load(Model_PATH)
+        print("Modèle de consommation chargé")
+        
         lr_imputer = joblib.load(Imput_PATH)
+        print("Imputer chargé")
+        
         lr_scaler = joblib.load(Scaler_PATH)
-        print("Modèle de Régression Linéaire chargé avec succès sur le port 5000.")
+        print("Scaler chargé")
+        
+        print("Modele de Regression Lineaire charge avec succes sur le port 5000.")
+        
     except Exception as e:
-        print(f"ERREUR FATALE: Échec du chargement des assets (port 5000). Vérifiez les fichiers .pkl. Erreur: {e}")
-        # On force les assets à None pour un contrôle dans la route
+        print(f"ERREUR FATALE: Echec du chargement des assets (port 5000). Erreur: {e}")
         lr_model = None
         lr_imputer = None
         lr_scaler = None
 
+print("Demarrage du chargement des modeles...")
+setup_heavy_files()
 Verif_Chemin()
 
 # ----------------------------------------------------
@@ -85,12 +107,13 @@ Verif_Chemin()
 def predict_conso():
     
     if lr_model is None:
-        return jsonify({"error": "Modèle de Consommation non chargé ou indisponible."}), 503
+        return jsonify({"error": "Modele de Consommation non charge ou indisponible."}), 503
 
     try:
         data_brute = request.get_json(force=True)
+        print("Donnees recues pour prediction de consommation")
     except:
-        return jsonify({"error": "Format JSON invalide ou manquant dans la requête.(donnée du questionnaire n'ont pas été chargé.)"}), 400
+        return jsonify({"error": "Format JSON invalide ou manquant dans la requete."}), 400
 
     # --- ÉTAPE 1 : PRÉPARATION ET CONVERSION  ---
     
@@ -98,7 +121,7 @@ def predict_conso():
     data_dico = {} 
 
     # Assurez-vous que toutes les features attendues sont dans le JSON, sinon on met 0 par défaut
-    for feature in All_Data :
+    for feature in All_Data:
         data_dico[feature] = 0 
 
     # 1. Mise à jour des valeurs numériques/brutes
@@ -112,18 +135,19 @@ def predict_conso():
         data_dico['nombre_appartement_cat'] = Nombre_App_Mapping[data_brute['nombre_appartement_cat']]
         
         # 3. Ajout de l'étiquette DPE PRÉDITE (reçue de l'API 5001)
-        # Ceci est la clé du flux séquentiel
         data_dico['etiquette_dpe'] = data_brute['etiquette_dpe'] 
+        print(f"Etiquette DPE recue: {data_brute['etiquette_dpe']}")
 
     except KeyError as e:
-        # Erreur si une catégorie n'est pas reconnue
-        return jsonify({"Vérifiez la cohérence des chaînes de caractères."}), 500
+        print(f"Erreur de cle: {e}")
+        return jsonify({"error": f"Cle manquante dans les donnees: {e}"}), 500
     
     # 4. Conversion des OHE/Booléennes (logement, type_batiment, énergie)
     
     # Logement (Neuf/Ancien)
     if data_brute.get('logement') == 'Neuf':
         data_dico['logement_neuf'] = 1
+        print("Batiment marque comme neuf")
 
     # Énergie (Même logique pour l'API de Régression que pour la DPE)
     energie_chauffage = data_brute.get('type_energie_principale_chauffage', '').strip()
@@ -133,12 +157,13 @@ def predict_conso():
         key = f'type_energie_principale_chauffage_{energie_chauffage}'.replace(' ', '_')
         if key in data_dico:
              data_dico[key] = 1
+             print(f"Energie chauffage activee: {key}")
 
     if energie_n1:
         key = f'type_energie_n1_{energie_n1}'.replace(' ', '_')
         if key in data_dico:
              data_dico[key] = 1
-
+             print(f"Energie N1 activee: {key}")
 
     # --- ÉTAPE 2 : PRÉ-TRAITEMENT SCALARISATION (Manuel) ---
 
@@ -146,7 +171,7 @@ def predict_conso():
 
     try:
         X_standard_input = df_input[Variable_Standardisee]
-        X_passthrough_input = df_input[Data_OHE_Boolean ]
+        X_passthrough_input = df_input[Data_OHE_Boolean]
 
         # Imputation 
         X_imputed = lr_imputer.transform(X_standard_input)
@@ -160,23 +185,53 @@ def predict_conso():
         # --- ÉTAPE 3 : PRÉDICTION ---
         prediction_brute = lr_model.predict(X_final_matrix)[0]
         prediction_finale = max(0, prediction_brute)
+        
+        print(f"Prediction consommation: {prediction_finale:.2f} kWh/an")
 
         return jsonify({
             "conso_predite_kwh": float(f"{prediction_finale:.2f}")
         }), 200
 
     except Exception as e:
-        # Erreur lors du pré-traitement scikit-learn ou de la prédiction
-        print(f"Erreur scikit-learn/prédiction : {str(e)}")
-        # Vous pouvez décommenter pour voir la matrice finale
-        # print("Matrice finale envoyée au modèle:", X_final_matrix) 
-        return jsonify({"error": f"Erreur interne lors de la prédiction : {str(e)}"}), 500
-
+        print(f"Erreur scikit-learn/prediction : {str(e)}")
+        return jsonify({"error": f"Erreur interne lors de la prediction : {str(e)}"}), 500
 
 # ----------------------------------------------------
-# 4. EXÉCUTION
+# 4. ROUTE DE SANTÉ
+# ----------------------------------------------------
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Route pour vérifier que l'API est prête"""
+    if lr_model is None or lr_imputer is None or lr_scaler is None:
+        return jsonify({
+            "status": "not ready", 
+            "model_loaded": lr_model is not None,
+            "imputer_loaded": lr_imputer is not None,
+            "scaler_loaded": lr_scaler is not None
+        }), 503
+        
+    return jsonify({
+        "status": "ready", 
+        "model_loaded": True,
+        "imputer_loaded": True,
+        "scaler_loaded": True
+    }), 200
+
+@app.route('/', methods=['GET'])
+def home():
+    """Route racine pour les tests de connexion"""
+    return jsonify({
+        "message": "API de Prediction de Consommation Energetique",
+        "status": "running",
+        "port": 5000
+    }), 200
+
+# ----------------------------------------------------
+# 5. EXÉCUTION
 # ----------------------------------------------------
 
 if __name__ == '__main__':
-    # Lancez cette API sur le port 5000
+    print("Lancement de l'API Consommation sur le port 5000...")
+    print("API prete a recevoir des requetes")
     app.run(host='0.0.0.0', port=5000, debug=False)
