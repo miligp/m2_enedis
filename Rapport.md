@@ -357,11 +357,16 @@ Le modèle obtenu est satisfaisant avec un F1-Score moyen égal à 0.75, que nou
 
 ---
 
-### Synthèse
 * Le modèle de **Régression Logistique** présente le **meilleur F1-score moyen** (0.7798).
 * Il est également **parfaitement stable** sur les 10 runs (Écart-type de 0.0), ce qui est un excellent indicateur de robustesse.
 * Le modèle **Random Forest** est moins performant en moyenne (0.7528) mais son score est également très stable (Écart-type de 0.0003).
 
+### Synthèse
 
+Le modèle retenu obtient un bon score mais il est à noter qu'il est plus à-même de prévoir les étiquettes C, D et E que les étiquettes "extrêmes", A,B,F et G .
+Ceci peut s'expliquer par la caractère ordinal de la variable cible d'une part et par le caractère normal/gaussien de la distribution de la variable étiquette_dpe.
+Nous n'avons pas eu le temps de les mettre en oeuvre mais avons néanmoins réfléchi à des pistes d'amélioration :
+ * le rééchantillonage : utiliser SMOTE afin de générer des échantillons permettant d'équilibrer la distribution.
+ * la pondération : pondérer favorablement les classes correspondant aux étiquettes A,B,F et G.
 
 ##  3. Interface 
