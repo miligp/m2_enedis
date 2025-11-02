@@ -1,4 +1,4 @@
-# m2_enedis
+# m2_enedis - EcoScan
 Enedis nous sollicite en vue d'évaluer l'impact de classe de Diagnostic de Performance Energétique (DPE) sur la consommations éléctriques  de logements. 
 
 ## OBJECTIFS 
@@ -75,5 +75,13 @@ Vous pouvez les télécharger à partir du lien suivant : [modèles](https://git
 
 ## DOCUMENTATION
 
-Vous pouvez vous référer au document ce trouvant sur ce lien : [documentation](https://github.com/miligp/m2_enedis/blob/main/Documentation_Technique.md)
+Vous pouvez vous référer au document ce trouvant sur ce lien : [documentation](https://github.com/miligp/m2_enedis/blob/main/Documentation_Technique.md)*
+
+# 📋 Cahiers des Charges
+
+## Évaluation 1 - Cahier des charges 1/2
+![Spécifications fonctionnelles et techniques - Partie 1](./Eval1.jpg)
+
+## Évaluation 2 - Cahier des charges 2/2  
+![Pack Standard, Intermédiaire et Expert - Partie 2](./Eval2.jpg)
 
