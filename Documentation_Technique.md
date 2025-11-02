@@ -165,3 +165,6 @@ L'application est également déployée publiquement et accessible sans installa
 
 URL Streamlit Cloud :
 https://m2enedis-u6bk7ax22n5cevhr2y9chf.streamlit.app/
+
+
+Marvin Curty, Mazilda ZEHRAOUI, Miléna Gordien Piquet - Université Lyon 2 - Master SISE
