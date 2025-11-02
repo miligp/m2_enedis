@@ -1,21 +1,40 @@
+
 FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
-# 1. Copier requirements d'abord (pour le cache)
+# Copier les fichiers essentiels
 COPY requirements.txt .
+COPY app.py .
+COPY file_loader.py .
+COPY api_manager.py .
+COPY start_app.py .
+COPY lr_imputer.pkl .
+COPY lr_model.pkl .
+COPY lr_scaler.pkl .
+COPY feature_columns_final.pkl .
+
+# Copier les APIs
+COPY API_Lineaire_Reg.py .
+COPY API_Random_Forest.py .
+
+# Copier les views
+COPY views/ ./views/
+
+#Copier les datas
+COPY Data/ ./Data/
+
+# Copier les images
+COPY img/ ./img/
+
+# Installer les dépendances
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 2. Copier TOUS les fichiers (y compris le modèle lourd)
-COPY . .
+# Créer les dossiers nécessaires
+RUN mkdir -p Data models
 
-EXPOSE 5000
-EXPOSE 5001  
-EXPOSE 8501
+# Exposer les ports
+EXPOSE 8501 5000 5001
 
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Commande de démarrage
+CMD ["python", "start_app.py"]
