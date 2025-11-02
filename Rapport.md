@@ -383,31 +383,41 @@ Nous n'avons pas eu le temps de les mettre en oeuvre mais avons néanmoins réfl
 
 #### Taille des fichiers de sérialisation
 
-Nous avons ensuite enregistré les modèles au format Joblib (moins volumineux que Pickle). Cependant le fichier demeurait trop volumineux pour l'exporter dans GIT. 
-Il a alors fallut trouver un compromis entre un bon F1-Score et une taille de fichier raisonnable en influant sur les différents paramètres du modèles. 
-Nous avons finalement obtenu un fichier de 300Mo (contre 1000Mo au départ).
+Nous avons initialement enregistré notre modèle avec pickle, mais celui-ci générait des fichiers trop volumineux. Nous avons donc opté pour joblib, qui est plus adapté pour des modèles lourds comme les Random Forest et permettait d'obtenir un fichier moins lourd — même si celui-ci restait trop volumineux pour être versionné sur GitHub, notamment en raison de la présence de plusieurs branches.
+Afin d’optimiser la taille, nous avons mené plusieurs expérimentations en faisant varier trois paramètres, dont la taille du dataset utilisé pour l'entraînement. Nous avons observé des modèles allant d'environ 300 Mo jusqu’à 1 Go, selon le compromis entre taille et performance. Nous avons finalement retenu un modèle offrant un bon score F1 tout en restant le plus léger possible.
+Par ailleurs, nous avons converti notre dataset logement en Parquet afin de réduire sa taille et faciliter son utilisation côté application. Cependant, ce format ne peut pas être utilisé pour stocker les modèles de type Random Forest.
 
+#### Stockage du modèle et chargement dynamique
 
-#### API
+Au départ, nous essayions de stocker le modèle directement dans le projet. Cependant, lors de la création de l’image Docker, nous avons constaté qu’il était impossible de versionner un fichier aussi volumineux sur GitHub. Nous avons donc pris la décision de stocker le modèle sur Google Drive.
 
-Les deux API (une pour chaque modèle) s'ouvrent sur deux localhost différent (5000 et 5001), et streamlit  s'ouvre sur une autre adresse. Ce qui crée trois conteneurs, qui ne communiquait pas entre eux. Nous avons donc centralisé la logique d'appel aux APIs des modèles dans le fichier api_manager.py.Ce module est le seul endroit qui connaît les adresses internes de nos services d'API.
-Ce qui a permis de créer l'image docker.
+Lors du lancement de l’application, le script app.py télécharge automatiquement le modèle depuis Drive grâce à un mécanisme de chargement à la demande. Cela permet d’avoir le fichier uniquement au moment de l’exécution, dans le dossier ml_project/.
 
 #### Image Docker
-* L'image Docker, elle aussi importante, n'était pas exportable vers GIT. L'idée a alors été de la stocker dans un drive, de sorte que lors de l'appel de app.py on charge le fichier pour qu'il soit dans le dossier ml_projet, seulement lorsqu'on le lance :  [Lien](https://drive.google.com/drive/folders/1ch2Ax0kroekZBe-_l1MF0wvHc-wZcgXd)
-* Le déploiement a présenté le même problème que la connection aux API. En effet, StreamlitCloud ne gère pas les 3 différentes API et nous n'avons pas réussi à trouver de solution, faute de temps (API Manger aurait peut-être pu apporter une solution).
-* Finalement, le site est déployé mais il n'est pas possible de faire focntionner la prédiction.
+* Le déploiement a présenté un problème de connection aux API (5000 et 5001) et notre App (localhost:8501). Car nos 3 contenaires ne fesait pas circuler l'information entre eux et il était compliqué de les allumer en même temps. 
+* Pour ce faire nous avons dockerisé l’ensemble de l’application afin d'obtenir une architecture modulaire comprenant :
+1 conteneur Streamlit
+2 conteneurs API Flask (1 par modèle)
+un mécanisme commun de gestion des requêtes via api_manager.py
+* Chaque API chargeait son modèle via file_loader.py (pour récouper le documents trop volumineux enregistrer sur le drive) au démarrage, afin de l’avoir en mémoire et répondre rapidement aux requêtes /predict.
+
+#### Le problème entre API et Streamlite Cloud
+
+* Les deux API (une pour chaque modèle) s'ouvrent sur deux localhost différent (5000 et 5001), et streamlit  s'ouvre sur localhost:8501. Cette architecture multi-services entraînait des problèmes de communication entre les conteneurs.
+L'application est donc déployée mais il ne nous ai pas possible de faire fonctionner la partie prédiction. 
+
+* On aurait pu résoudre cela, en utilisant la même méthode que pour Docker. C'est à dire centralisé la logique d’appel aux modèles dans un module api_manager.py, qui est deviendrais le seul point de connaissance des adresses internes des services API. 
+
 
  
 
 ##  3. Interface 
 Nous avons choisi une interface de type Streamlit qui se constitue de :
 * une page de présentation rapide des données, 
-* une analyse de certain KPi importants  (on peut s'apercevoir à quel point les  données ne sont pas très bien distribuées : beacoup d'étiquettes C, D et E)
+* une analyse : certain KPi importants  (on peut s'apercevoir à quel point les  données ne sont pas très bien distribuées (beacoup d'étiquettes C, D et E))
 * des graphes sur les consommations (trop correlés avec les étiquettes ou pas assez avec le type de logement par exemple) 
-* une carte : nous avons essayé d'utiliser un nombre suffisant de données, ce qui génére une certaine lenteur de l'affichage sous forme de cluster en fonction du zoom. 
-* une page contenant les prédictions se base sur nos API de modèle, l'un ce sert de la prediction de l'autre. API dpe commence
-* l'historique dess recherches
+* une carte : Nous avons essayé d'utiliser un nombre suffisant de données, ce qui génére une certaine lenteur de l'affichage sous forme de cluster en fonction du zoom. 
+* Page de prédiction : Une page contenant les prédictions se base sur nos API de modèle, l'un ce sert de la prediction de l'autre. et l'historique des recherches.
 
 
 
