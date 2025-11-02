@@ -56,44 +56,6 @@ La variable 'type_batiment' contient trois modalités : 'appartement', 'immeuble
 
 Les variables quantitatives qui seront utilisées dans les modèles de prédiction, sont définies sur des amplitudes importantes du fait de valeurs aberrantes. Les algorithmes utilisés dans la création des modèles étant basés sur des calculs de distances, ils sont sensibles à ces écarts. Afin de réduire ceux-ci, les valeurs aberrantes ont été supprimées.
 
-
-```python
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-
-
-pd.set_option('display.width', None)
-
-df=pd.read_csv("C:/Users/marvi/Desktop/4_Python_ML/Projet/df_logement.csv", sep = ';')
-
-Quantitatives = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
-variables_exclure = ['qualite_isolation_murs', 'etiquette_dpe', 'nombre_appartement_cat']
-
-variables_quantitatives = ['conso_5_usages_ef', 'conso_5_usages_ef_energie_n1', 'cout_total_5_usages', 'hauteur_sous_plafond', 'cout_total_5_usages_energie_n1', 'surface_habitable_logement', 'periode_construction']
-
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-# Statistiques descriptives
-print("Statistiques des variables quantitatives:")
-stats_quanti_avec_outliers = df[variables_quantitatives].describe().round(2).T.drop(columns=['count'])
-print(stats_quanti_avec_outliers)
-
-# Visualisation des distributions
-fig, axes = plt.subplots(2, 3, figsize=(15, 10))
-axes = axes.ravel()
-
-for i, col in enumerate(variables_quantitatives[:6]):  # Premières 6 variables
-    df[col].hist(bins=30, ax=axes[i])
-    axes[i].set_title(f'Distribution de {col}')
-    axes[i].set_xlabel(col)
-    axes[i].set_ylabel('Fréquence')
-
-plt.tight_layout()
-plt.savefig('histogrammes_quanti_avec_outliers.png')
-```
-
     Statistiques des variables quantitatives:
                                         mean        std    min     25%      50%  \
     conso_5_usages_ef               14443.94  572375.13  132.0  4341.7  6957.90   
@@ -117,45 +79,6 @@ plt.savefig('histogrammes_quanti_avec_outliers.png')
 ![png](rapport_1_bis_files/rapport_1_bis_9_1.png)
     
 
-
-
-```python
-#Enlever les valeurs aberantes
-seuils = {
-        'hauteur_sous_plafond': (1.8, 4.0),
-        'surface_habitable_logement': (15, 300),
-        'conso_5_usages_ef': (500, 50_000),
-        'conso_5_usages_ef_energie_n1': (500, 50_000),
-        'cout_total_5_usages': (100, 20_000),
-        'cout_total_5_usages_energie_n1': (100, 20_000)
-    }
-# Appliquer les seuils une colonne à la fois
-for col, (min_val, max_val) in seuils.items():
-    if col in df.columns:
-        # Créer le masque pour CETTE colonne
-        masque = (df[col] >= min_val) & (df[col] <= max_val)
-        # Appliquer le masque sur tout le DataFrame
-        df = df[masque]
-
-print(f"Nettoyage terminé. Shape final: {df.shape}")
-
-# Statistiques descriptives
-print("Statistiques des variables quantitatives:")
-stats_quanti_sans_outliers = df[variables_quantitatives].describe().round(2).T.drop(columns=['count'])
-print(stats_quanti_sans_outliers)
-# Visualisation des distributions
-fig, axes = plt.subplots(2, 3, figsize=(15, 10))
-axes = axes.ravel()
-
-for i, col in enumerate(variables_quantitatives[:6]):  # Premières 6 variables
-    df[col].hist(bins=30, ax=axes[i])
-    axes[i].set_title(f'Distribution de {col}')
-    axes[i].set_xlabel(col)
-    axes[i].set_ylabel('Fréquence')
-
-plt.tight_layout()
-plt.savefig('histogrammes_quanti_sans_outliers.png')
-```
 
     Nettoyage terminé. Shape final: (1110136, 30)
     Statistiques des variables quantitatives:
@@ -196,65 +119,6 @@ On cherche ici à construire un modèle permettant de prévoir la consommation �
 
 
 
-```python
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.impute import SimpleImputer
-from pathlib import Path
-
-
-#On apporte les donnée 
-df = pd.read_csv(r'C:/Users/marvi/Desktop/4_Python_ML/Projet_fin/donnees_ml_preparees.csv', sep=',')
-
-
-#Variable a standardisé 
-Standardiser_Variables = ['hauteur_sous_plafond', 'surface_habitable_logement']
-
-# Colonnes catégorielles/booléennes (déjà encodées) à utiliser telles quelles
-Colonne_Utilises = [
-    'qualite_isolation_murs', 'etiquette_dpe', 'periode_construction', 'nombre_appartement_cat', 'type_batiment_immeuble', 
-    'type_batiment_maison', 'type_energie_principale_chauffage_Charbon', 'type_energie_principale_chauffage_Fioul', 
-    'type_energie_principale_chauffage_Gaz (GPL/Propane/Butane)', 'type_energie_principale_chauffage_Gaz naturel', 
-    'type_energie_principale_chauffage_Réseau de chauffage urbain', 'type_energie_principale_chauffage_Électricité', 
-    'type_energie_n1_Charbon', 'type_energie_n1_Fioul', 'type_energie_n1_Gaz (GPL/Propane/Butane)', 
-    'type_energie_n1_Gaz naturel', 'type_energie_n1_Réseau de chauffage urbain', 'type_energie_n1_Électricité', 'logement_neuf'
-]
-
-#éviter multicolinéarité
-Exclure = ['conso_5_usages_ef_energie_n1','cout_total_5_usages','cout_total_5_usages_energie_n1']
-
-
-Toutes_Donnees = Standardiser_Variables + Colonne_Utilises + ['conso_5_usages_ef']
-
-# Matrice de corrélation
-mat_corr = df[Toutes_Donnees].corr('pearson')
-
-# Isolement de la colonne des corrélations  
-corr_avec_score = mat_corr['conso_5_usages_ef'].sort_values(ascending=False)
-
-# Supprimer 'conso_5_usages_ef' 
-corr_avec_score = corr_avec_score.drop('conso_5_usages_ef')
-
-# Graphique à barres horizontal 
-plt.figure(figsize=(12, 10)) 
-corr_avec_score.plot(kind='barh', color=(corr_avec_score > 0).map({True: 'green', False: 'red'})) 
-# La couleur est ajustée pour visualiser facilement les corrélations positives et négatives
-
-plt.title("Corrélation de chaque variable avec la variable cible 'conso_5_usages_ef'", fontsize=14)
-plt.xlabel("Coefficient de corrélation de Pearson")
-plt.ylabel("Variables")
-plt.axvline(x=0, color='grey', linestyle='--') # Ligne de référence à 0
-plt.grid(axis='x', linestyle='--', alpha=0.6)
-plt.tight_layout() # Assure que les étiquettes ne sont pas coupées
-plt.show()
-```
-
-
     
 ![png](rapport_1_bis_files/rapport_1_bis_12_0.png)
     
@@ -264,93 +128,6 @@ plt.show()
 
 On effectue la régression sur 10 runs avec une division entre train et test dans les proportions respectives de 80% et 20%, randomisée à chaque run.
 Les résultats obtenus se trouvent ci-dessous :
-
-
-```python
-# --- Configuration et Données ---
-Cible = 'conso_5_usages_ef'
-RANDOM_SEED = 42
-Run = 10
-
-Toutes_Donnees = Standardiser_Variables + Colonne_Utilises 
-
-# Convertir les booléens en entiers (si ce n'est pas déjà fait)
-for col in df.columns:
-    if df[col].dtype == 'bool':
-        df[col] = df[col].astype(int)
-
-# Définir les features (X) et la cible (y)
-X = df.drop([Cible] + Exclure, axis=1, errors='ignore')
-y = df[Cible]
-
-# S'assurer que X ne contient que les colonnes nécessaires, dans le bon ordre
-X = X[Toutes_Donnees]
-
-print(f"Nombre total d'observations après chargement: {len(df)}")
-print(f"Nombre de variables du modèle: {X.shape[1]}")
-
-print("\nModèle : Régression Linéaire Standard")
-print(f"Évaluation de la stabilité du modèle sur {Run} splits aléatoires (80/20)...")
-
-stability_metrics = []
-
-# Initialisation des transformateurs (ils seront fit_transformé à chaque itération)
-imputer = SimpleImputer(strategy='mean')
-scaler = StandardScaler()
-model = LinearRegression()
-
-# === INITIALISATION DES VARIABLES POUR LE STOCKAGE DU DERNIER RUN (CRUCIAL) ===
-y_test_run_last = None
-y_pred_run_last = None
-X_test_run_last = None # Ajout pour la Matrice de Confusion future
-
-for i in range(1, Run + 1):
-    
-    # 1. Split des données
-    X_train_run, X_test_run, y_train_run, y_test_run = train_test_split(
-        X, y, test_size=0.3, random_state=RANDOM_SEED + i
-    )
-    
-    # Séparer les colonnes à scaler
-    X_train_scale = X_train_run[Standardiser_Variables]
-    X_test_scale = X_test_run[Standardiser_Variables]
-    
-    # 2. Imputation 
-    X_train_scale_imputed = imputer.fit_transform(X_train_scale)
-    X_test_scale_imputed = imputer.transform(X_test_scale)
-    
-    # 3. Standardisation 
-    X_train_scaled = scaler.fit_transform(X_train_scale_imputed)
-    X_test_scaled = scaler.transform(X_test_scale_imputed)
-    
-    # 4. Reconstruction des ensembles (Concaténer les features standardisées et les features pass-through)
-    
-    # Features "Passthrough" (déjà traitées/encodées)
-    X_train_passthrough = X_train_run[Colonne_Utilises].values
-    X_test_passthrough = X_test_run[Colonne_Utilises].values
-
-    # Ensemble final pour l'entraînement (Numérique Scalé + Passthrough)
-    X_train_final = np.hstack((X_train_scaled, X_train_passthrough))
-    X_test_final = np.hstack((X_test_scaled, X_test_passthrough))
-
-    # 5. Entraînement et Prédiction du Modèle
-    model.fit(X_train_final, y_train_run)
-    y_pred_run = model.predict(X_test_final)
-
-    # === SAUVEGARDE DU DERNIER RUN (Run 10) ===
-    if i == Run:
-        y_test_run_last = y_test_run
-        y_pred_run_last = y_pred_run
-        X_test_run_last = X_test_run
-    
-    # 6. Calcul des Métriques
-    mse = mean_squared_error(y_test_run, y_pred_run)
-    rmse = np.sqrt(mse)
-    r2 = r2_score(y_test_run, y_pred_run)
-    
-    stability_metrics.append({'run': i, 'R2': r2, 'RMSE': rmse})
-    print(f"Run {i}/{Run}: R2={r2:.4f}, RMSE={rmse:.2f}")
-```
 
     Nombre total d'observations après chargement: 1043068
     Nombre de variables du modèle: 21
@@ -368,47 +145,6 @@ for i in range(1, Run + 1):
     Run 9/10: R2=0.7788, RMSE=2783.82
     Run 10/10: R2=0.7782, RMSE=2797.28
     
-
-
-```python
-results_df = pd.DataFrame(stability_metrics)
-
-print("\n" + "="*54)
-print("RÉSUMÉ DE LA STABILITÉ DU MODÈLE (Régression Linéaire)")
-print("="*54)
-print(f"Meilleur R2 : {results_df['R2'].max():.4f}")
-print(f"Pire R2   : {results_df['R2'].min():.4f}")
-print(f"R2 Moyen  : {results_df['R2'].mean():.4f}")
-print(f"Écart Type R2 : {results_df['R2'].std():.4f}")
-
-
-
-feature_names = Standardiser_Variables + Colonne_Utilises
-coefficients = model.coef_
-
-# Si vous avez plusieurs variables cibles (régression multi-sorties),
-# model.coef_ sera un tableau 2D. Il faut s'assurer qu'il est aplati (flattened).
-# S'il est 1D (régression simple), l'aplatissement ne change rien.
-if coefficients.ndim > 1:
-    coefficients = coefficients.flatten()
-    
-# 2. Créer le DataFrame
-coefficients_df = pd.DataFrame({
-    'Variable': feature_names,
-    'Coefficient': coefficients
-})
-
-# 3. Trier et afficher (optionnel, mais recommandé)
-# Trie les variables par la valeur absolue du coefficient pour voir les plus importantes
-coefficients_df['Importance_Absolue'] = np.abs(coefficients_df['Coefficient'])
-coefficients_df = coefficients_df.sort_values(by='Importance_Absolue', ascending=False)
-
-# Affichage final
-print("\n" + "="*39)
-print("COEFFICIENTS DU DERNIER MODÈLE ENTRAINE")
-print("="*39)
-print(coefficients_df.to_string(index=False, float_format="%.4f"))
-```
 
     
     ======================================================
@@ -447,28 +183,6 @@ print(coefficients_df.to_string(index=False, float_format="%.4f"))
     
 
 
-```python
-import matplotlib.pyplot as plt
-import numpy as np
-
-plt.figure(figsize=(12, 6))
-plt.scatter(y_test_run_last, y_pred_run_last, alpha=0.5)
-
-# Ligne de référence y=x (où les prédictions parfaites devraient se trouver)
-# Détermination des limites des axes pour s'assurer que la ligne rouge est visible
-max_val = max(y_test_run_last.max(), y_pred_run_last.max())
-min_val = min(y_test_run_last.min(), y_pred_run_last.min())
-plt.plot([min_val, max_val], [min_val, max_val], color='red', linestyle='--', label='Ligne d\'ajustement parfait')
-
-plt.title('Vérification de l\'ajustement : Consommation Réelle vs. Prédite (Run 10)', fontsize=14)
-plt.xlabel(f'Consommation Réelle ({Cible})', fontsize=12)
-plt.ylabel(f'Consommation Prédite', fontsize=12)
-plt.legend()
-plt.grid(True, linestyle='--', alpha=0.6)
-plt.show()
-```
-
-
     
 ![png](rapport_1_bis_files/rapport_1_bis_17_0.png)
     
@@ -479,57 +193,6 @@ Toutefois, nous avons effectué une régression pénalisée afin d'éventuelleme
 
 #### 2. Régression linéaire régularisée
 
-
-```python
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.impute import SimpleImputer
-from pathlib import Path
-
-# Définir les features (X) et la cible (y)
-X = df.drop([Cible] + Exclure, axis=1, errors='ignore')
-y = df[Cible]
-# ====================================================================
-# Split Initial & Prétraitement de Base (Préparation GridSearch)
-# ====================================================================
-
-print("\n--- Prétraitement et Split initial pour GridSearch ---")
-
-# Split initial (80% Train, 20% Test)
-# X et y doivent avoir été définis dans la CELL 2
-X_train_raw, X_test_raw, y_train_raw, y_test_raw = train_test_split(
-    X, y, test_size=0.3, random_state=RANDOM_SEED
-)
-
-# Nous utiliserons y_train_raw comme cible pour le GridSearch sur les données brutes
-y_target_gs = y_train_raw
-
-
-# --- 1. Imputation (Fit sur Train) ---
-imputer_gs = SimpleImputer(strategy='mean')
-# Imputer toutes les colonnes à standardiser
-X_train_imputed = imputer_gs.fit_transform(X_train_raw[Standardiser_Variables])
-
-# --- 2. Standardisation (Fit sur Train) ---
-scaler_gs = StandardScaler()
-# Standardiser les colonnes imputées
-X_train_scaled = scaler_gs.fit_transform(X_train_imputed)
-
-# --- 3. Reconstruction de la Matrice d'Entraînement ---
-# Colonnes Passthrough (déjà encodées)
-X_train_passthrough = X_train_raw[Colonne_Utilises].values
-
-# X_train_final sera la matrice d'entraînement prétraitée pour le GridSearch
-X_train_final = np.hstack((X_train_scaled, X_train_passthrough))
-
-print(f"Taille du jeu d'entraînement final (pour GridSearch): {X_train_final.shape}")
-```
-
     
     --- Prétraitement et Split initial pour GridSearch ---
     Taille du jeu d'entraînement final (pour GridSearch): (730147, 21)
@@ -539,50 +202,6 @@ print(f"Taille du jeu d'entraînement final (pour GridSearch): {X_train_final.sh
 Nous avons commencé par chercher la meilleure valeur du coefficient de régularisation alpha parmi les valeurs suivantes : 0.0, 0.1, 1.0, 10.0, 100.0, 500.0, 1000.0 pour Ridge et Lasso.
 
 
-
-```python
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-# Import des modèles de régression régularisée
-from sklearn.linear_model import Ridge, Lasso, LinearRegression 
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.impute import SimpleImputer
-
-# ====================================================================
-# CELL 4: GridSearch pour Ridge et Lasso (Recherche de alpha)
-# ====================================================================
-
-print("\n--- GridSearch pour optimiser Ridge et Lasso (Cible Brute) ---")
-param_grid = {'alpha': [0.0, 0.1, 1.0, 10.0, 100.0, 500.0, 1000.0]} 
-
-
-y_target_gs = y_train_raw #
-
-best_model = None
-best_score = -np.inf 
-best_name = ""
-
-# A. GridSearch pour Ridge
-ridge_model = Ridge(random_state=RANDOM_SEED)
-# Utiliser n_jobs=1 pour éviter le MemoryError que vous avez rencontré
-grid_ridge = GridSearchCV(ridge_model, param_grid, cv=5, scoring='neg_mean_squared_error', n_jobs=1, verbose=1)
-grid_ridge.fit(X_train_final, y_target_gs)
-
-print("\nRésultat Ridge:")
-print(f"Meilleur alpha pour Ridge: {grid_ridge.best_params_['alpha']:.4f}")
-
-if grid_ridge.best_score_ > best_score:
-    best_score = grid_ridge.best_score_
-    best_model = grid_ridge.best_estimator_
-    best_name = "Ridge"
-
-
-```
-
     
     --- GridSearch pour optimiser Ridge et Lasso (Cible Brute) ---
     Fitting 5 folds for each of 7 candidates, totalling 35 fits
@@ -590,91 +209,6 @@ if grid_ridge.best_score_ > best_score:
     Résultat Ridge:
     Meilleur alpha pour Ridge: 10.0000
     
-
-
-```python
-Le modèle Lasso ayant rencontré des problèmes de convergence, nous avons retenu le modèle Ridge avec alpha = 10.
-Afin de tester la stabilité du modèle, on effectue la régression sur 10 runs avec une division entre train et test dans les proportions respectives de 80% et 20%, randomisée à chaque run.
-Les résultats obtenus se trouvent ci-dessous :
-```
-
-
-```python
-# ==============================================
-# Test de Stabilité (Validation Croisée 10 Runs)
-# ==============================================
-
-
-# --- Configuration et Données ---
-Cible = 'conso_5_usages_ef'
-RANDOM_SEED = 42
-Run = 10
-
-# 🚨 DÉFINITION  MEILLEUR MODÈLE (Basé sur le GridSearch et Ridge)
-
-
-from sklearn.linear_model import Ridge
-best_model_name = "Ridge"
-best_model = Ridge(alpha=10.0, random_state=RANDOM_SEED)
-
-
-print(f"\n--- Test de Stabilité pour le meilleur modèle ({best_model_name}, alpha=10.0) ---")
-print(f"Évaluation sur {Run} splits aléatoires (30% test)...")
-
-stability_metrics = []
-
-# Réinitialiser les transformateurs
-imputer_stab = SimpleImputer(strategy='mean')
-scaler_stab = StandardScaler()
-
-# Initialisation des variables pour le stockage du dernier run (Crucial)
-y_test_run_last = None
-y_pred_run_last = None
-X_test_run_last = None
-
-for i in range(1, Run + 1):
-    
-    # 1. Split des données 
-    X_train_stab, X_test_stab, y_train_stab, y_test_stab = train_test_split(
-        X, y, test_size=0.2, random_state=RANDOM_SEED + i
-    )
-    
-    # Prétraitement complet du nouveau split
-    X_train_scale_stab = X_train_stab[Standardiser_Variables]
-    X_test_scale_stab = X_test_stab[Standardiser_Variables]
-    
-    # Imputation et Standardisation
-    imputer_stab.fit(X_train_scale_stab)
-    X_train_imputed_stab = imputer_stab.transform(X_train_scale_stab)
-    X_test_imputed_stab = imputer_stab.transform(X_test_scale_stab)
-
-    scaler_stab.fit(X_train_imputed_stab)
-    X_train_scaled_stab = scaler_stab.transform(X_train_imputed_stab)
-    X_test_scaled_stab = scaler_stab.transform(X_test_imputed_stab)
-    
-    # Reconstruction des ensembles
-    X_train_final_stab = np.hstack((X_train_scaled_stab, X_train_stab[Colonne_Utilises].values))
-    X_test_final_stab = np.hstack((X_test_scaled_stab, X_test_stab[Colonne_Utilises].values))
-
-    # 4. Entraînement et Prédiction (Cible Brute)
-    best_model.fit(X_train_final_stab, y_train_stab)
-    y_pred_run_stab = best_model.predict(X_test_final_stab)
-    
-    # 5. Stockage du Dernier Run
-    if i == Run:
-        y_test_run_last = y_test_stab
-        y_pred_run_last = y_pred_run_stab
-        X_test_run_last = X_test_stab
-    
-    # 6. Calcul des Métriques
-    mse = mean_squared_error(y_test_stab, y_pred_run_stab)
-    rmse = np.sqrt(mse)
-    r2 = r2_score(y_test_stab, y_pred_run_stab)
-    
-    stability_metrics.append({'run': i, 'R2': r2, 'RMSE': rmse})
-    print(f"Run {i}/{Run}: R2={r2:.4f}, RMSE={rmse:.2f}")
-
-```
 
     
     --- Test de Stabilité pour le meilleur modèle (Ridge, alpha=10.0) ---
@@ -691,18 +225,6 @@ for i in range(1, Run + 1):
     Run 10/10: R2=0.7793, RMSE=2794.16
     
 
-
-```python
-results_df = pd.DataFrame(stability_metrics)
-print("\n" + "="*54)
-print("RÉSUMÉ DE LA STABILITÉ DU MODÈLE (Régression Linéaire)")
-print("="*54)
-print(f"Meilleur R2 : {results_df['R2'].max():.4f}")
-print(f"Pire R2   : {results_df['R2'].min():.4f}")
-print(f"R2 Moyen  : {results_df['R2'].mean():.4f}")
-print(f"Écart Type R2 : {results_df['R2'].std():.4f}")
-```
-
     
     ======================================================
     RÉSUMÉ DE LA STABILITÉ DU MODÈLE (Régression Linéaire)
@@ -715,186 +237,9 @@ print(f"Écart Type R2 : {results_df['R2'].std():.4f}")
 
 ### B. Modèle de classification : prévision de l'étiquette DPE
 
-
-```python
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split, RandomizedSearchCV
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import f1_score
-
-# -----------------------------
-# 1️⃣ Chargement du dataset
-# -----------------------------
-df = pd.read_csv(r'C:\Users\marvi\Desktop\4_Python_ML\Projet\donnees_ml_preparees.csv',sep=',')
-df.columns = df.columns.str.strip().str.lower()
-
-y = df['etiquette_dpe']
-X = df.drop(columns=['etiquette_dpe'])
-
-# -----------------------------
-# 2️⃣ Split complet train/test
-# -----------------------------
-X_train_full, X_test_full, y_train_full, y_test_full = train_test_split(
-    X, y, test_size=0.3, random_state=42, stratify=y
-)
-
-# -----------------------------
-# 3️⃣ Sous-échantillon stratifié
-# -----------------------------
-sample_train_size = 5000
-sample_test_size = 1000
-
-X_train, _, y_train, _ = train_test_split(
-    X_train_full, y_train_full,
-    train_size=sample_train_size,
-    stratify=y_train_full,
-    random_state=42
-)
-
-X_test, _, y_test, _ = train_test_split(
-    X_test_full, y_test_full,
-    train_size=sample_test_size,
-    stratify=y_test_full,
-    random_state=42
-)
-
-# -----------------------------
-# 4️⃣ Standardisation
-# -----------------------------
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-
-# -----------------------------
-# 5️⃣ RandomizedSearchCV pour hyperparamètres
-# -----------------------------
-param_dist = {
-    'C': [0.01, 0.1, 1, 10],
-    'penalty': ['l1', 'l2']
-}
-
-logreg = LogisticRegression(solver='saga', max_iter=5000, random_state=42)
-
-random_search = RandomizedSearchCV(
-    estimator=logreg,
-    param_distributions=param_dist,
-    n_iter=5,
-    scoring='f1_weighted',
-    cv=2,
-    n_jobs=1,
-    verbose=1,
-    random_state=42
-)
-
-random_search.fit(X_train_scaled, y_train)
-
-best_params = random_search.best_params_
-print("Les meilleurs paramètres sont :", best_params)
-```
-
     Fitting 2 folds for each of 5 candidates, totalling 10 fits
     Les meilleurs paramètres sont : {'penalty': 'l2', 'C': 10}
     
-
-
-```python
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import f1_score
-from sklearn.preprocessing import StandardScaler
-
-n_runs=10
-
-
-print("\nModèle : Régression Logistique")
-print(f"Évaluation de la stabilité du modèle sur {n_runs} avec des échantillons stratifiés d'entraînement de tailles respectives {sample_train_size} et {sample_test_size}")
-
-
-print(f"Nombre total d'observations après chargement: {len(df)}")
-print(f"Nombre de variables du modèle: {X.shape[1]}")
-
-# -----------------------------
-# 1️⃣ Chargement du dataset
-# -----------------------------
-df = pd.read_csv(r'C:\Users\marvi\Desktop\4_Python_ML\Projet\donnees_ml_preparees.csv',sep=',')
-df.columns = df.columns.str.strip().str.lower()
-
-X = df.drop(columns=['etiquette_dpe'])
-y = df['etiquette_dpe']
-
-# -----------------------------
-# 2️⃣ Split complet train/test
-# -----------------------------
-X_train_full, X_test_full, y_train_full, y_test_full = train_test_split(
-    X, y, test_size=0.3, random_state=42, stratify=y
-)
-
-# -----------------------------
-# 3️⃣ Sous-échantillon stratifié
-# -----------------------------
-sample_train_size = 10000
-sample_test_size = 3000
-
-X_train, _, y_train, _ = train_test_split(
-    X_train_full, y_train_full,
-    train_size=sample_train_size,
-    stratify=y_train_full,
-    random_state=42
-)
-
-X_test, _, y_test, _ = train_test_split(
-    X_test_full, y_test_full,
-    train_size=sample_test_size,
-    stratify=y_test_full,
-    random_state=42
-)
-
-# -----------------------------
-# 4️⃣ Standardisation
-# -----------------------------
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-
-# -----------------------------
-# 5️⃣ Hyperparamètres (à adapter)
-# -----------------------------
-best_params = {'C': 10, 'penalty': 'l2', 'solver': 'saga', 'max_iter': 5000}
-
-# -----------------------------
-# 6️⃣ Entraînement sur 10 runs
-# -----------------------------
-n_runs = 10
-scores = []
-
-print("Entraînement sur 10 runs\n")
-
-for i in range(n_runs):
-    model = LogisticRegression(**best_params, random_state=i, n_jobs=1)
-    model.fit(X_train_scaled, y_train)
-    y_pred = model.predict(X_test_scaled)
-    f1 = f1_score(y_test, y_pred, average='weighted')
-    scores.append(f1)
-    print(f"Run {i+1:2d}: F1-score = {f1:.4f}")
-
-mean_f1 = np.mean(scores)
-std_f1 = np.std(scores)
-
-
-
-
-
-
-
-print("\n Moyenne des F1-scores :", round(mean_f1, 4))
-print(" Écart-type :", round(std_f1, 4))
-
-
-```
 
     
     Modèle : Régression Logistique
