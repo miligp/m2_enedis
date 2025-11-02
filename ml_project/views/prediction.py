@@ -10,9 +10,9 @@ import time
 
 # --- 1. CONFIGURATION DES ENDPOINTS ET CONSTANTES ---
 
-# URLs des APIs - version cloud compatible
-API_URL_DPE = "http://localhost:5001/predict" 
-API_URL_CONSO = "http://localhost:5000/predict"
+# URLs des APIs - exactement comme dans vos fichiers
+API_URL_DPE = "http://localhost:5001/predict_dpe" 
+API_URL_CONSO = "http://localhost:5000/predict_conso"
 API_HEALTH_DPE = "http://localhost:5001/health"
 API_HEALTH_CONSO = "http://localhost:5000/health"
 
@@ -32,13 +32,17 @@ def check_api_health():
     
     try:
         response = requests.get(API_HEALTH_DPE, timeout=5)
-        status['dpe'] = response.status_code == 200
+        if response.status_code == 200:
+            status_data = response.json()
+            status['dpe'] = status_data.get('model_loaded', False)
     except:
         status['dpe'] = False
         
     try:
         response = requests.get(API_HEALTH_CONSO, timeout=5)
-        status['conso'] = response.status_code == 200
+        if response.status_code == 200:
+            status_data = response.json()
+            status['conso'] = status_data.get('model_loaded', False)
     except:
         status['conso'] = False
         
@@ -144,6 +148,9 @@ def show_page():
         - Utilisez le gestionnaire d'APIs pour les lancer
         - Vérifiez les logs pour identifier les problèmes
         """)
+        
+        if st.button("🔄 Vérifier à nouveau le statut"):
+            st.rerun()
         return
 
     # --- Formulaire utilisateur ---
@@ -201,7 +208,6 @@ def show_page():
 
         # --- A. APPEL 1 : CLASSIFICATION (DPE) ---
         dpe_prediction = None
-        dpe_confidence = None
         
         try:
             with st.spinner("1/2: Estimation de la Classe DPE... (API 5001)"):
@@ -217,11 +223,10 @@ def show_page():
                     return
 
                 if response_dpe.status_code == 200:
-                    dpe_prediction = dpe_result.get("prediction")
-                    dpe_confidence = dpe_result.get("confidence", 0)
+                    dpe_prediction = dpe_result.get("prediction_DPE_index")
                     
                     if dpe_prediction is None:
-                        st.error("API DPE : La clé 'prediction' est manquante ou NULL. Arrêt du traitement.")
+                        st.error("API DPE : La clé 'prediction_DPE_index' est manquante ou NULL. Arrêt du traitement.")
                         return
                         
                     st.success(f"✅ Classe DPE prédite: {CLASSES_DPE_MAPPING[dpe_prediction]}")
@@ -241,13 +246,11 @@ def show_page():
         # 2. ENRICHISSEMENT DES DONNÉES pour l'étape de Régression
         data_for_conso = data_initial.copy()
         
-        # AJOUTER L'ÉTIQUETTE DPE PRÉDITE
+        # AJOUTER L'ÉTIQUETTE DPE PRÉDITE (exactement comme attendu par votre API)
         data_for_conso['etiquette_dpe'] = dpe_prediction
-        data_for_conso['classe_dpe'] = CLASSES_DPE_MAPPING[dpe_prediction]
 
         # --- B. APPEL 2 : RÉGRESSION (CONSOMMATION) ---
         conso_pred = None
-        conso_confidence = None
         
         try:
             with st.spinner("2/2: Estimation de la Consommation... (API 5000)"):
@@ -263,11 +266,10 @@ def show_page():
                     return
 
                 if response_conso.status_code == 200:
-                    conso_pred = conso_result.get("prediction")
-                    conso_confidence = conso_result.get("confidence", 0)
+                    conso_pred = conso_result.get("conso_predite_kwh")
                     
                     if conso_pred is None:
-                        st.error("API Consommation : La clé 'prediction' est manquante ou NULL.")
+                        st.error("API Consommation : La clé 'conso_predite_kwh' est manquante ou NULL.")
                         return
 
                     st.success("✅ Consommation estimée avec succès!")
@@ -313,11 +315,11 @@ def show_page():
             with col_chart2:
                 st.plotly_chart(fig_conso, use_container_width=True)
 
-            # Affichage des résultats numériques avec confiance
+            # Affichage des résultats numériques
             st.markdown(f"""
                 <div style='text-align:center; color:#ecf0f1; font-size:18px; margin-top:20px;'>
-                    <p><b>Classe DPE prédite :</b> <span style='color:{COLORS_DPE[max(0, min(len(COLORS_DPE)-1, dpe_prediction))]}; font-size:22px; font-weight:bold;'>{classe_pred}</span> (Confiance: {dpe_confidence:.1%})</p>
-                    <p><b>Consommation estimée :</b> <span style='color:#3498db; font-size:22px; font-weight:bold;'>{conso_pred:,.1f} kWh/an</span> (Confiance: {conso_confidence:.1%})</p>
+                    <p><b>Classe DPE prédite :</b> <span style='color:{COLORS_DPE[max(0, min(len(COLORS_DPE)-1, dpe_prediction))]}; font-size:22px; font-weight:bold;'>{classe_pred}</span></p>
+                    <p><b>Consommation estimée :</b> <span style='color:#3498db; font-size:22px; font-weight:bold;'>{conso_pred:,.1f} kWh/an</span></p>
                     <p><b>Émissions CO₂ estimées :</b> <span style='font-size:22px;'>{co2_pred} kg/an</span></p>
                 </div>
             """, unsafe_allow_html=True)
@@ -337,8 +339,6 @@ def show_page():
                 "logement": [logement],
                 "Conso_estimee_kWh": [conso_pred],
                 "CO2_estime_kg": [co2_pred],
-                "Confiance_DPE": [dpe_confidence],
-                "Confiance_Conso": [conso_confidence],
                 "Date": [pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")]
             })
 
@@ -366,10 +366,14 @@ def show_page():
         - 📊 **API Consommation (Port 5000)** : Régression Linéaire
         - 🔄 **Séquence** : DPE → puis Consommation (avec DPE en feature)
         
+        **Endpoints utilisés :**
+        - `POST /predict_dpe` → Prédiction classe DPE
+        - `POST /predict_conso` → Prédiction consommation
+        - `GET /health` → Vérification statut API
+        
         **Données transmises :**
         - Features brutes du formulaire → API DPE
-        - Features + DPE prédit → API Consommation
-        - Format JSON avec validation
+        - Features + étiquette DPE prédite → API Consommation
         """)
 
 # Point d'entrée pour Streamlit
