@@ -6,20 +6,43 @@ import base64
 import plotly.graph_objects as go
 import requests
 import json
+import time
 
 # --- 1. CONFIGURATION DES ENDPOINTS ET CONSTANTES ---
 
-# L'API de Classification DPE est appelée en premier (Port 5001)
-API_URL_DPE = "http://127.0.0.1:5001/predict_dpe" 
-# L'API de Régression Consommation est appelée en second (Port 5000)
-API_URL_CONSO = "http://127.0.0.1:5000/predict_conso" 
+# URLs des APIs - version cloud compatible
+API_URL_DPE = "http://localhost:5001/predict" 
+API_URL_CONSO = "http://localhost:5000/predict"
+API_HEALTH_DPE = "http://localhost:5001/health"
+API_HEALTH_CONSO = "http://localhost:5000/health"
 
-# Mappings pour l'affichage (Doivent correspondre à l'encodage de votre modèle)
+# Mappings pour l'affichage
 CLASSES_DPE_MAPPING = ["G", "F", "E", "D", "C", "B", "A"]
 COLORS_DPE = ["#c0392b", "#8e44ad", "#e74c3c", "#e67e22", "#f1c40f", "#27ae60", "#2ecc71"] 
 CO2_FACTOR = 0.25  # Facteur d'émission CO2 (kg/kWh)
 
-# --- 2. FONCTIONS DE VISUALISATION (JAUGES PLOTLY) ---
+# --- 2. FONCTIONS AUXILIAIRES ---
+
+def check_api_health():
+    """Vérifie si les APIs sont disponibles"""
+    status = {
+        'dpe': False,
+        'conso': False
+    }
+    
+    try:
+        response = requests.get(API_HEALTH_DPE, timeout=5)
+        status['dpe'] = response.status_code == 200
+    except:
+        status['dpe'] = False
+        
+    try:
+        response = requests.get(API_HEALTH_CONSO, timeout=5)
+        status['conso'] = response.status_code == 200
+    except:
+        status['conso'] = False
+        
+    return status
 
 def create_dpe_gauge(index):
     """Crée la jauge Plotly pour la classe DPE à partir de l'index prédit (0=G, 6=A)."""
@@ -61,19 +84,7 @@ def create_conso_gauge(conso_pred):
     fig.update_layout(template="plotly_dark", height=300, margin=dict(l=20, r=20, t=60, b=20))
     return fig
 
-# --- 3. FONCTION DE VÉRIFICATION DES APIS ---
-
-def is_port_open(port):
-    """Vérifie si un port est ouvert (méthode plus fiable que les requêtes HTTP)"""
-    import socket
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(2)
-            return s.connect_ex(('localhost', port)) == 0
-    except:
-        return False
-
-# --- 4. FONCTION PRINCIPALE ---
+# --- 3. FONCTION PRINCIPALE ---
 
 def show_page():
     
@@ -98,28 +109,42 @@ def show_page():
         </div>
     """, unsafe_allow_html=True)
 
-    # ✅ VÉRIFICATION DES APIS AU DÉMARRAGE
-    port_5000_open = is_port_open(5000)
-    port_5001_open = is_port_open(5001)
+    # Vérification du statut des APIs
+    st.subheader("📊 Statut des APIs")
+    api_status = check_api_health()
     
-    if not port_5000_open or not port_5001_open:
-        st.warning("🔄 Initialisation des services de prédiction...")
-        
-        with st.container():
-            col1, col2 = st.columns(2)
-            with col1:
-                if not port_5001_open:
-                    st.error("❌ API DPE (port 5001) - Non détectée")
-                else:
-                    st.success("✅ API DPE (port 5001) - Prête")
-            
-            with col2:
-                if not port_5000_open:
-                    st.error("❌ API Consommation (port 5000) - Non détectée")
-                else:
-                    st.success("✅ API Consommation (port 5000) - Prête")
-                    
-        st.info("💡 _Si les APIs ne sont pas détectées, patientez quelques secondes et rechargez la page. Le démarrage automatique est en cours._")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        status_color = "🟢" if api_status['conso'] else "🔴"
+        status_text = "EN LIGNE" if api_status['conso'] else "HORS LIGNE"
+        st.markdown(f"""
+            <div style='background-color: {"#d4edda" if api_status['conso'] else "#f8d7da"}; 
+                        padding: 15px; border-radius: 5px; text-align: center;'>
+                <h4>API Consommation (Port 5000)</h4>
+                <h3>{status_color} {status_text}</h3>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        status_color = "🟢" if api_status['dpe'] else "🔴"
+        status_text = "EN LIGNE" if api_status['dpe'] else "HORS LIGNE"
+        st.markdown(f"""
+            <div style='background-color: {"#d4edda" if api_status['dpe'] else "#f8d7da"}; 
+                        padding: 15px; border-radius: 5px; text-align: center;'>
+                <h4>API DPE (Port 5001)</h4>
+                <h3>{status_color} {status_text}</h3>
+            </div>
+        """, unsafe_allow_html=True)
+
+    if not api_status['conso'] or not api_status['dpe']:
+        st.error("""
+        ❌ **Les APIs ne sont pas toutes disponibles :**
+        - Vérifiez que les APIs sont démarrées sur les ports 5000 et 5001
+        - Utilisez le gestionnaire d'APIs pour les lancer
+        - Vérifiez les logs pour identifier les problèmes
+        """)
+        return
 
     # --- Formulaire utilisateur ---
     st.markdown("<h3 style='color:#f1c40f; text-align:center;'>Données du logement</h3>", unsafe_allow_html=True)
@@ -128,36 +153,41 @@ def show_page():
 
     with col1:
         surface_habitable_logement = st.number_input("Surface habitable (m²) :", min_value=10, max_value=500, value=80, step=5)
-        periode_construction = st.selectbox("Période de construction :",["avant 1948", "1948-1974","1975-1977","1978-1982", "1983-1988", "1989-2000", "2001-2005", "2006-2012", "2013-2021", "après 2021"] )
+        periode_construction = st.selectbox("Période de construction :", [
+            "avant 1948", "1948-1974", "1975-1977", "1978-1982", "1983-1988", 
+            "1989-2000", "2001-2005", "2006-2012", "2013-2021", "après 2021"
+        ])
         hauteur_sous_plafond = st.number_input("Hauteur sous plafond (m) :", min_value=2.0, max_value=5.0, value=2.5, step=0.1)
-        nombre_appartement_cat = st.selectbox("Nombre d'appartement :", ["Maison(Unitaire ou 2 à 3 logements)","Petit Collectif(4 à 9 logements)", "Moyen Collectif(10 à 30 logements)", "Grand Collectif(> 30 logements)"])
+        nombre_appartement_cat = st.selectbox("Nombre d'appartement :", [
+            "Maison(Unitaire ou 2 à 3 logements)",
+            "Petit Collectif(4 à 9 logements)", 
+            "Moyen Collectif(10 à 30 logements)", 
+            "Grand Collectif(> 30 logements)"
+        ])
+        
     with col2:
-        type_energie_n1 = st.selectbox("Type d'énergie principale (l'année dernière) :", ["Gaz naturel ", "Électricité", "Réseau de chauffage urbain", "Bois et biomasse", "Fioul", "Gaz (GPL/Propane/Butane)", "Charbon"])
-        type_energie_principale_chauffage = st.selectbox("Type d'énergie principale (cette année) :", ["Gaz naturel ", "Électricité", "Réseau de chauffage urbain", "Bois et biomasse", "Fioul", "Gaz (GPL/Propane/Butane)", "Charbon"])
-        qualite_isolation_murs = st.selectbox("Qualité de l'isolation des murs :",["Insuffisante", "Moyenne", "bonne", "très bonne"])
-        logement = st.selectbox("Bâtiment :",["Neuf", "Ancien"])
+        type_energie_n1 = st.selectbox("Type d'énergie principale (l'année dernière) :", [
+            "Gaz naturel", "Électricité", "Réseau de chauffage urbain", 
+            "Bois et biomasse", "Fioul", "Gaz (GPL/Propane/Butane)", "Charbon"
+        ])
+        type_energie_principale_chauffage = st.selectbox("Type d'énergie principale (cette année) :", [
+            "Gaz naturel", "Électricité", "Réseau de chauffage urbain", 
+            "Bois et biomasse", "Fioul", "Gaz (GPL/Propane/Butane)", "Charbon"
+        ])
+        qualite_isolation_murs = st.selectbox("Qualité de l'isolation des murs :", [
+            "Insuffisante", "Moyenne", "bonne", "très bonne"
+        ])
+        logement = st.selectbox("Bâtiment :", ["Neuf", "Ancien"])
         
     st.markdown("<div style='text-align:center; margin-top:30px;'>", unsafe_allow_html=True)
-    
-    # Désactiver le bouton si les APIs ne sont pas prêtes
-    if not port_5000_open or not port_5001_open:
-        predict_button = st.button("Lancer la double prédiction", disabled=True, help="Les APIs de prédiction ne sont pas encore prêtes")
-    else:
-        predict_button = st.button("Lancer la double prédiction")
-        
+    predict_button = st.button("🚀 Lancer la double prédiction", type="primary")
     st.markdown("</div>", unsafe_allow_html=True)
 
     
     # --- LOGIQUE DE DOUBLE PRÉDICTION ET D'AFFICHAGE ---
     if predict_button:
         
-        # Vérification finale avant de lancer les prédictions
-        if not is_port_open(5000) or not is_port_open(5001):
-            st.error("🚨 Les APIs de prédiction ne sont plus disponibles. Veuillez recharger la page.")
-            return
-        
-        # 1. Construction des données initiales (features communes aux deux modèles, SANS l'étiquette DPE)
-        # Ces données seront envoyées à l'API DPE
+        # 1. Construction des données initiales pour l'API DPE
         data_initial = {
             "surface_habitable_logement": surface_habitable_logement,
             "periode_construction": periode_construction, 
@@ -166,16 +196,18 @@ def show_page():
             "type_energie_n1": type_energie_n1,
             "type_energie_principale_chauffage": type_energie_principale_chauffage,
             "qualite_isolation_murs": qualite_isolation_murs,
-            "logement": logement, 
+            "logement": logement
         }
 
         # --- A. APPEL 1 : CLASSIFICATION (DPE) ---
-        dpe_index = None
+        dpe_prediction = None
+        dpe_confidence = None
+        
         try:
             with st.spinner("1/2: Estimation de la Classe DPE... (API 5001)"):
                 response_dpe = requests.post(API_URL_DPE, json=data_initial, timeout=30)
                 
-                # Vérification du JSON (gestion de l'erreur "Expecting value...")
+                # Vérification du JSON
                 try:
                     dpe_result = response_dpe.json()
                 except json.JSONDecodeError:
@@ -185,39 +217,40 @@ def show_page():
                     return
 
                 if response_dpe.status_code == 200:
-                    dpe_index = dpe_result.get("prediction_DPE_index")
+                    dpe_prediction = dpe_result.get("prediction")
+                    dpe_confidence = dpe_result.get("confidence", 0)
                     
-                    if dpe_index is None:
-                        st.error("API DPE : La clé 'prediction_DPE_index' est manquante ou NULL. Arrêt du traitement.")
+                    if dpe_prediction is None:
+                        st.error("API DPE : La clé 'prediction' est manquante ou NULL. Arrêt du traitement.")
                         return
+                        
+                    st.success(f"✅ Classe DPE prédite: {CLASSES_DPE_MAPPING[dpe_prediction]}")
                         
                 else:
                     st.error(f"Erreur API DPE ({response_dpe.status_code}): {dpe_result.get('error', 'Erreur inconnue')}. Arrêt du traitement.")
                     return
+                    
         except requests.exceptions.ConnectionError:
             st.error(f"❌ Échec de la connexion à l'API DPE sur {API_URL_DPE}. Est-elle lancée sur le port 5001?")
             return
         except requests.exceptions.Timeout:
-            st.error("⏰ Timeout lors de l'appel à l'API DPE. L'API met trop de temps à répondre.")
+            st.error("⏰ Timeout lors de l'appel à l'API DPE. Le modèle met trop de temps à répondre.")
             return
             
         
         # 2. ENRICHISSEMENT DES DONNÉES pour l'étape de Régression
-        # L'API de Consommation a besoin de l'étiquette DPE prédite.
-        
-        # Copier les données initiales
         data_for_conso = data_initial.copy()
         
-        # AJOUTER L'ÉTIQUETTE DPE PRÉDITE (clé 'etiquette_dpe')
-        data_for_conso['etiquette_dpe'] = dpe_index 
-        
-        st.success(f"✅ Classe DPE prédite (indice {dpe_index}). Préparation de l'estimation de consommation...")
+        # AJOUTER L'ÉTIQUETTE DPE PRÉDITE
+        data_for_conso['etiquette_dpe'] = dpe_prediction
+        data_for_conso['classe_dpe'] = CLASSES_DPE_MAPPING[dpe_prediction]
 
         # --- B. APPEL 2 : RÉGRESSION (CONSOMMATION) ---
         conso_pred = None
+        conso_confidence = None
+        
         try:
             with st.spinner("2/2: Estimation de la Consommation... (API 5000)"):
-                # ENVOIE LES DONNÉES COMPLÈTES (y compris l'étiquette DPE prédite)
                 response_conso = requests.post(API_URL_CONSO, json=data_for_conso, timeout=30)
                 
                 # Vérification du JSON
@@ -230,103 +263,115 @@ def show_page():
                     return
 
                 if response_conso.status_code == 200:
-                    conso_pred = conso_result.get("conso_predite_kwh")
+                    conso_pred = conso_result.get("prediction")
+                    conso_confidence = conso_result.get("confidence", 0)
                     
                     if conso_pred is None:
-                        st.error("API Consommation : La clé 'conso_predite_kwh' est manquante ou NULL.")
+                        st.error("API Consommation : La clé 'prediction' est manquante ou NULL.")
                         return
+
+                    st.success("✅ Consommation estimée avec succès!")
 
                 else:
                     st.error(f"Erreur API Consommation ({response_conso.status_code}): {conso_result.get('error', 'Erreur inconnue')}")
                     return
+                    
         except requests.exceptions.ConnectionError:
             st.error(f"❌ Échec de la connexion à l'API Consommation sur {API_URL_CONSO}. Est-elle lancée sur le port 5000?")
             return
         except requests.exceptions.Timeout:
-            st.error("⏰ Timeout lors de l'appel à l'API Consommation. L'API met trop de temps à répondre.")
+            st.error("⏰ Timeout lors de l'appel à l'API Consommation. Le modèle met trop de temps à répondre.")
             return
 
 
-        # 3. Traitement, Affichage et Sauvegarde
+        # 3. Affichage des résultats
+        if dpe_prediction is not None and conso_pred is not None:
+            # Finalisation des métriques
+            conso_pred = max(50, round(conso_pred, 1))
+            co2_pred = round(conso_pred * CO2_FACTOR, 1) 
+            
+            # Affichage DPE
+            fig_dpe, classe_pred = create_dpe_gauge(dpe_prediction)
+            fig_conso = create_conso_gauge(conso_pred)
 
-        # Finalisation des métriques (Sécurité : conso positive)
-        conso_pred = max(50, round(conso_pred, 1))
-        co2_pred = round(conso_pred * CO2_FACTOR, 1) 
-        
-        # Affichage DPE
-        fig_dpe, classe_pred = create_dpe_gauge(dpe_index)
-        fig_conso = create_conso_gauge(conso_pred)
+            st.markdown("""
+                <div style='background-color:rgba(255,255,255,0.05); 
+                            border:2px solid rgba(52,152,219,0.6);
+                            border-radius:20px;
+                            padding:25px;
+                            text-align:center;
+                            width:100%;
+                            margin:30px auto 10px auto;
+                            box-shadow:0 0 15px rgba(52,152,219,0.2);'>
+                    <h3 style='color:#3498db; font-weight:800;'>Synthèse des Performances Estimées</h3>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            col_chart1, col_chart2 = st.columns(2)
+            with col_chart1:
+                st.plotly_chart(fig_dpe, use_container_width=True)
+            with col_chart2:
+                st.plotly_chart(fig_conso, use_container_width=True)
 
-        st.markdown("""
-            <div style='background-color:rgba(255,255,255,0.05); 
-                        border:2px solid rgba(52,152,219,0.6);
-                        border-radius:20px;
-                        padding:25px;
-                        text-align:center;
-                        width:100%;
-                        margin:30px auto 10px auto;
-                        box-shadow:0 0 15px rgba(52,152,219,0.2);'>
-                <h3 style='color:#3498db; font-weight:800;'>Synthèse des Performances Estimées</h3>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        col_chart1, col_chart2 = st.columns(2)
-        with col_chart1:
-            st.plotly_chart(fig_dpe, use_container_width=True)
-        with col_chart2:
-            st.plotly_chart(fig_conso, use_container_width=True)
+            # Affichage des résultats numériques avec confiance
+            st.markdown(f"""
+                <div style='text-align:center; color:#ecf0f1; font-size:18px; margin-top:20px;'>
+                    <p><b>Classe DPE prédite :</b> <span style='color:{COLORS_DPE[max(0, min(len(COLORS_DPE)-1, dpe_prediction))]}; font-size:22px; font-weight:bold;'>{classe_pred}</span> (Confiance: {dpe_confidence:.1%})</p>
+                    <p><b>Consommation estimée :</b> <span style='color:#3498db; font-size:22px; font-weight:bold;'>{conso_pred:,.1f} kWh/an</span> (Confiance: {conso_confidence:.1%})</p>
+                    <p><b>Émissions CO₂ estimées :</b> <span style='font-size:22px;'>{co2_pred} kg/an</span></p>
+                </div>
+            """, unsafe_allow_html=True)
 
-        # Affichage des résultats numériques
-        st.markdown(f"""
-            <div style='text-align:center; color:#ecf0f1; font-size:18px; margin-top:20px;'>
-                <p><b>Classe DPE prédite :</b> <span style='color:{COLORS_DPE[max(0, min(len(COLORS_DPE)-1, dpe_index))]}; font-size:22px; font-weight:bold;'>{classe_pred}</span></p>
-                <p><b>Consommation estimée :</b> <span style='color:#3498db; font-size:22px; font-weight:bold;'>{conso_pred:,.1f} kWh/an</span></p>
-                <p><b>Émissions CO₂ estimées :</b> <span style='font-size:22px;'>{co2_pred} kg/an</span></p>
-            </div>
-        """, unsafe_allow_html=True)
+            # Sauvegarde dans l'historique
+            save_path = os.path.join(os.path.dirname(__file__), "..", "Data", "historique_predictions.csv")
+            
+            new_row = pd.DataFrame({
+                "surface_habitable_logement": [surface_habitable_logement],
+                "periode_construction": [periode_construction],
+                "type_energie_n1": [type_energie_n1],
+                "type_energie_principale_chauffage": [type_energie_principale_chauffage],
+                "Classe_predite": [classe_pred],
+                "qualite_isolation_murs": [qualite_isolation_murs],
+                "hauteur_sous_plafond": [hauteur_sous_plafond],
+                "nombre_appartement_cat": [nombre_appartement_cat], 
+                "logement": [logement],
+                "Conso_estimee_kWh": [conso_pred],
+                "CO2_estime_kg": [co2_pred],
+                "Confiance_DPE": [dpe_confidence],
+                "Confiance_Conso": [conso_confidence],
+                "Date": [pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")]
+            })
 
-        # Sauvegarde dans l'historique
-        save_path = os.path.join(os.path.dirname(__file__), "..", "Data", "historique_predictions.csv")
-        
-        new_row = pd.DataFrame({
-            "surface_habitable_logement": [surface_habitable_logement],
-            "periode_construction": [periode_construction],
-            "type_energie_n1": [type_energie_n1],
-            "type_energie_principale_chauffage":[type_energie_principale_chauffage],
-            "Classe_predite": [classe_pred],
-            "qualite_isolation_murs":[qualite_isolation_murs],
-            "hauteur_sous_plafond":[hauteur_sous_plafond],
-            "nombre_appartement_cat":[nombre_appartement_cat], 
-            "logement":[logement],
-            "Conso_estimee_kWh": [conso_pred],
-            "CO2_estime_kg": [co2_pred]      
-        })
-
-        try:
             if os.path.exists(save_path):
                 historique = pd.read_csv(save_path)
                 historique = pd.concat([historique, new_row], ignore_index=True)
             else:
-                # Créer le dossier Data s'il n'existe pas
-                os.makedirs(os.path.dirname(save_path), exist_ok=True)
                 historique = new_row
 
             historique.to_csv(save_path, index=False)
-            st.success("💾 Prédiction sauvegardée dans l'historique")
-        except Exception as e:
-            st.warning(f"⚠️ Impossible de sauvegarder dans l'historique: {e}")
 
-        # Historique des simulations 
+            # Historique des simulations 
+            st.markdown("""
+                <hr style='border:1px solid rgba(255,255,255,0.1); margin-top:40px;'>
+                <h4 style='text-align:center; color:#f1c40f;'>Historique des simulations (10 dernières)</h4>
+            """, unsafe_allow_html=True)
+
+            st.dataframe(historique.tail(10).iloc[::-1], use_container_width=True)
+
+    # Section informations techniques
+    with st.expander("🔧 Informations techniques"):
         st.markdown("""
-            <hr style='border:1px solid rgba(255,255,255,0.1); margin-top:40px;'>
-            <h4 style='text-align:center; color:#f1c40f;'>Historique des simulations</h4>
-        """, unsafe_allow_html=True)
+        **Architecture des prédictions :**
+        - 🎯 **API DPE (Port 5001)** : Classification Random Forest
+        - 📊 **API Consommation (Port 5000)** : Régression Linéaire
+        - 🔄 **Séquence** : DPE → puis Consommation (avec DPE en feature)
+        
+        **Données transmises :**
+        - Features brutes du formulaire → API DPE
+        - Features + DPE prédit → API Consommation
+        - Format JSON avec validation
+        """)
 
-        try:
-            if os.path.exists(save_path):
-                historique = pd.read_csv(save_path)
-                st.dataframe(historique.tail(10).iloc[::-1], use_container_width=True)
-            else:
-                st.info("Aucun historique disponible pour le moment.")
-        except Exception as e:
-            st.warning(f"Impossible de charger l'historique: {e}")
+# Point d'entrée pour Streamlit
+if __name__ == "__main__":
+    show_page()
