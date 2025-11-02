@@ -81,11 +81,7 @@ def show_page():
         st.markdown("""
             <div style='text-align:center;'>
                 <img class='team-avatar' src='https://cdn-icons-png.flaticon.com/512/4140/4140048.png' width='120'>
-                <div class='member-name'>Personne 1</div>
-                <div class='member-role'>
-                    Développeuse de l'application<br>
-                    Interface & intégration Streamlit
-                </div>
+                <div class='member-name'>Marvin Curty</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -93,11 +89,7 @@ def show_page():
         st.markdown("""
             <div style='text-align:center;'>
                 <img class='team-avatar' src='https://cdn-icons-png.flaticon.com/512/4140/4140047.png' width='120'>
-                <div class='member-name'>Personne 2</div>
-                <div class='member-role'>
-                    Cheffe de projet<br>
-                    Coordination & gestion du planning
-                </div>
+                <div class='member-name'>Mazilda Zehraoui</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -105,11 +97,7 @@ def show_page():
         st.markdown("""
             <div style='text-align:center;'>
                 <img class='team-avatar' src='https://cdn-icons-png.flaticon.com/512/4140/4140037.png' width='120'>
-                <div class='member-name'>Personne 3</div>
-                <div class='member-role'>
-                    Data Scientist<br>
-                    Préparation des données & modélisation
-                </div>
+                <div class='member-name'>Milena Gordien Piquet</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -131,35 +119,28 @@ def show_page():
     # Objectifs futurs
     
     st.markdown("""
-        <h2 style='color:#f1c40f; text-align:center; font-weight:900; margin-top:50px;'>Objectifs futurs</h2>
-        <p style='color:#cccccc; text-align:center; max-width:900px; margin:auto; line-height:1.6;'>
-            Les prochaines étapes du projet sont encore à définir.<br>
-            Plusieurs pistes sont envisageables : intégration d’un modèle prédictif réel, amélioration de l’expérience utilisateur,<br>
-            ou extension des fonctionnalités de visualisation.<br><br>
-            <b>... à voir</b>
-        </p>
-    """, unsafe_allow_html=True)
+    <h2 style='color:#f1c40f; text-align:center; font-weight:900; margin-top:50px;'>Objectifs futurs</h2>
+    <p style='color:#cccccc; text-align:center; max-width:900px; margin:auto; line-height:1.6;'>
+        Les prochaines évolutions d’<b>EcoScan Dashboard</b> visent à renforcer ses capacités d’analyse et d’intelligence.<br><br>
+        • Amélioration du modèle prédictif grâce à l’intégration de nouvelles variables issues de données ouvertes 
+        (température, climat, type de chauffage).<br>
+        • Actualisation automatique des données via une API pour maintenir les visualisations à jour en temps réel.<br>
+        • Réentraînement du modèle lorsque de nouvelles données sont disponibles afin d’améliorer la précision des prédictions.<br>
+        • Mise en ligne de la plateforme pour permettre un accès public et faciliter le partage des résultats.<br><br>
+        À terme, <b>EcoScan</b> ambitionne de devenir un outil intelligent et connecté, 
+        capable de suivre en continu la performance énergétique des logements 
+        et d’accompagner les utilisateurs dans leurs décisions.
+    </p>
+""", unsafe_allow_html=True)
 
     # Liens utiles 
     
     st.markdown("""
         <h2 style='color:#3498db; text-align:center; font-weight:900; margin-top:50px;'>🌐 Liens utiles</h2>
         <div style='text-align:center;'>
-            <a href='https://github.com/personne1' target='_blank' 
+            <a href='https://github.com/miligp' target='_blank' 
                style='color:#f1c40f; font-size:18px; text-decoration:none; font-weight:700;'>
-               🔗 GitHub - Personne 1
-            </a><br>
-            <a href='https://github.com/personne2' target='_blank' 
-               style='color:#f1c40f; font-size:18px; text-decoration:none; font-weight:700;'>
-               🔗 GitHub - Personne 2
-            </a><br>
-            <a href='https://github.com/personne3' target='_blank' 
-               style='color:#f1c40f; font-size:18px; text-decoration:none; font-weight:700;'>
-               🔗 GitHub - Personne 3
-            </a><br><br>
-            <a href='https://www.streamlit.io' target='_blank'
-               style='color:#2ecc71; font-size:17px; text-decoration:none;'>
-               🌍 Framework : Streamlit
+               🔗 GitHub - Miléna Gordien Piquet
             </a>
         </div>
 
