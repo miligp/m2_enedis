@@ -114,7 +114,9 @@ git clone https://github.com/miligp/m2_enedis.git
 ```bash
 cd m2_enedis
 ```
-
+```bash
+cd ml_project
+```
 
 #### 2. Lancement (Build & Run)
 
