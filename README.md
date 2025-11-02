@@ -35,6 +35,9 @@ et lancer :
 ```bash
 docker run -d -p 8501:8501 miligp12/ml-project-streamlit:latest
 ```
+3. Lancer sur StreamlitCloud :
+   
+https://m2enedis-u6bk7ax22n5cevhr2y9chf.streamlit.app/
 
 Pour des informations complémentaires, vous référez à la rubrique Documentation plus bas.
 
