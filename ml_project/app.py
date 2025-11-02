@@ -3,6 +3,10 @@ import base64
 import streamlit as st
 from streamlit_option_menu import option_menu
 from views import contexte, analyse, cartographie, prediction, apropos
+from file_loader import setup_heavy_files  # ✅ AJOUT IMPORT
+
+# ✅ AJOUT: Télécharge les fichiers lourds au démarrage
+setup_heavy_files()
 
 # Configuration générale 
 st.set_page_config(
@@ -103,8 +107,8 @@ color_map = {
 # Couleur active actuelle 
 active_color = color_map.get(selected, "#f9f621")
 
-st.markdown(
-    f"""
+# ✅ CORRECTION: Problème de f-string résolu
+css_style = f"""
     <style>
     /* Applique la couleur active dynamiquement */
     .nav-pills .nav-link.active {{
@@ -116,13 +120,13 @@ st.markdown(
         background-color: {active_color}33 !important;  /* couleur légère au hover */
     }}
     </style>
-    """,
-    unsafe_allow_html=True
-)
+"""
+
+st.markdown(css_style, unsafe_allow_html=True)
 
 # Pied de page 
 st.sidebar.markdown(
-    "<div class='footer'>Miléna, Marvin & Mazilda’s Dashboard</div>",
+    "<div class='footer'>Miléna, Marvin & Mazilda's Dashboard</div>",
     unsafe_allow_html=True
 )
 
