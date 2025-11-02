@@ -119,8 +119,8 @@ def show_page():
     # Objectifs futurs
     
     st.markdown("""
-    <h2 style='color:#f1c40f; text-align:center; font-weight:900; margin-top:50px;'>Objectifs futurs</h2>
-    <p style='color:#cccccc; text-align:center; max-width:900px; margin:auto; line-height:1.6;'>
+    <h2 style='color:#1c1b18; text-align:center; font-weight:900; margin-top:50px;'>Objectifs futurs</h2>
+    <div style='color:#cccccc; text-align:center; max-width:900px; margin:auto; line-height:1.6;'>
         Les prochaines évolutions d’<b>EcoScan Dashboard</b> visent à renforcer ses capacités d’analyse et d’intelligence.<br><br>
         • Amélioration du modèle prédictif grâce à l’intégration de nouvelles variables issues de données ouvertes 
         (température, climat, type de chauffage).<br>
@@ -130,7 +130,7 @@ def show_page():
         À terme, <b>EcoScan</b> ambitionne de devenir un outil intelligent et connecté, 
         capable de suivre en continu la performance énergétique des logements 
         et d’accompagner les utilisateurs dans leurs décisions.
-    </p>
+    </div>
 """, unsafe_allow_html=True)
 
     # Liens utiles 
