@@ -77,3 +77,10 @@ Vous pouvez les télécharger à partir du lien suivant : [modèles](https://git
 
 Vous pouvez vous référer au document ce trouvant sur ce lien : [documentation](https://github.com/miligp/m2_enedis/blob/main/Documentation_Technique.md)
 
+## 📋 Cahiers des Charges
+
+###  Cahier des charges 1/2
+![Spécifications fonctionnelles et techniques - Partie 1](./Eval1.jpg)
+
+### Cahier des charges 2/2  
+![Pack Standard, Intermédiaire et Expert - Partie 2](./Eval2.jpg)
