@@ -145,11 +145,9 @@ Les résultats obtenus se trouvent ci-dessous :
     Run 9/10: R2=0.7788, RMSE=2783.82
     Run 10/10: R2=0.7782, RMSE=2797.28
     
-
-    
-    ======================================================
-    RÉSUMÉ DE LA STABILITÉ DU MODÈLE (Régression Linéaire)
-    ======================================================
+    ================================
+    RÉSUMÉ DE LA STABILITÉ DU MODÈLE
+    ================================
     Meilleur R2 : 0.7808
     Pire R2   : 0.7778
     R2 Moyen  : 0.7788
@@ -198,21 +196,17 @@ Toutefois, nous avons effectué une régression pénalisée afin d'éventuelleme
     Taille du jeu d'entraînement final (pour GridSearch): (730147, 21)
     
 
-
 Nous avons commencé par chercher la meilleure valeur du coefficient de régularisation alpha parmi les valeurs suivantes : 0.0, 0.1, 1.0, 10.0, 100.0, 500.0, 1000.0 pour Ridge et Lasso.
 
 
-    
     --- GridSearch pour optimiser Ridge et Lasso (Cible Brute) ---
     Fitting 5 folds for each of 7 candidates, totalling 35 fits
     
     Résultat Ridge:
     Meilleur alpha pour Ridge: 10.0000
     
-
-    
     --- Test de Stabilité pour le meilleur modèle (Ridge, alpha=10.0) ---
-    Évaluation sur 10 splits aléatoires (30% test)...
+    Évaluation sur 10 splits aléatoires (20% test)...
     Run 1/10: R2=0.7784, RMSE=2789.76
     Run 2/10: R2=0.7811, RMSE=2778.23
     Run 3/10: R2=0.7796, RMSE=2799.31
@@ -224,16 +218,28 @@ Nous avons commencé par chercher la meilleure valeur du coefficient de régular
     Run 9/10: R2=0.7788, RMSE=2784.00
     Run 10/10: R2=0.7793, RMSE=2794.16
     
-
-    
-    ======================================================
-    RÉSUMÉ DE LA STABILITÉ DU MODÈLE (Régression Linéaire)
-    ======================================================
+    ================================
+    RÉSUMÉ DE LA STABILITÉ DU MODÈLE
+    ================================
     Meilleur R2 : 0.7811
     Pire R2   : 0.7784
     R2 Moyen  : 0.7795
     Écart Type R2 : 0.0009
     
+
+
+## Comparaison des Modèles de Régression
+
+| Métrique | Non pénalisée | Ridge | Lasso |
+| :--- | :--- | :--- | :--- |
+| **Meilleur R²** | 0.7808 | **0.7811** | Donnée manquante |
+| **Pire R²** | 0.7778 | 0.7784 | Donnée manquante |
+| **R² Moyen** | 0.7788 | **0.7795** | Donnée manquante |
+| **Écart Type R²** | 0.0010 | **0.0009** | Donnée manquante |
+
+* Les données pour le modèle **Lasso** ne sont pas disponibles car nous ne sommes pas parvenus à obtnir sa convergence.
+* Le modèle **Ridge** ($R^2$ Moyen de $0.7795$) est légèrement **plus performant** et **plus stable** (Écart Type $0.0009$) que le modèle Non pénalisé.
+* Nous avons toutefois choisi de retenir le modèle de régression non pénalisée car il est plus simples à entraîner et mettre en oeuvre. 
 
 ### B. Modèle de classification : prévision de l'étiquette DPE
 
@@ -262,3 +268,11 @@ Nous avons commencé par chercher la meilleure valeur du coefficient de régular
      Moyenne des F1-scores : 0.7798
      Écart-type : 0.0
     
+
+
+
+
+
+
+
+##  3. Interface 
