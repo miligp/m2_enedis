@@ -1,0 +1,36 @@
+# RAPPORT METHODOLOGIQUE
+
+Dans le cadre de notre projet, nous devions créer une interface permettant de prévoir et visualiser la consommation énérgétique et l'étiquette DPE d'un foyer en se basant sur des informations entrées par l'utilisateur. 
+Ce rapport reprend les étapes principales de notre travail en expliquant, dans les grandes lignes, les méthodes et choix effectués, de l'acquisition des données jusqu'à leur utilisation dans la conception de nos modèles de prédiction.
+
+##  1. ACQUISITION ET TRAITEMENT DES DONNEES
+
+L'acquisition des données s'est faite depuis l'API de l'ADEME sous la forme de deux jeux de données, l'un contenant des informations sur les logements neufs et l'autre sur des logements anciens.
+Ces dataframes n'ayant pas la même structure, des transformations ont été effectuées disctinctement sur chaque dataframe dans un premier temps, elles seront abordées superficiellement dans un premier temps.
+Une fois les deux dataframes joints pour n'en former qu'un seul, d'autres transformations ont effectuées et seront davantage expliquées dans un second temps.
+
+### A. Traitement avant concaténation
+#### 1. Valeurs manquantes
+Dans les deux dataframes, des valeurs manquaient, surtout pour les variables 'complement_adresse_logement', 'annee_construction', 'nombre_appartement' et 'type_installation_chauffage' dans le dataframe contenant les logements anciens et pour 'surface_habitable_immeuble', 'nombre_niveau_logement' dans celui contenant les logements neufs.   
+
+* Les lignes contenant les valeurs manquantes pour la variable 'type_installation_chauffage' ont été supprimées .
+* La variable 'complement_adresse_logement' contient beaucoup de valeurs manquantes (22%), n'apportant pas une information nécessaire dans ce contexte, elle a été supprimée entièrement.
+* La variable 'annee_construction' contient elle aussi beaucoup de valeurs manquantes(42%), puisque nous disposons de la variable 'période_construction', elle a été supprimée.
+* Les lignes manquantes pour les variables 'surface_habitable_logement' et 'surface_chauffee_installation_chauffage_n1' ont été supprimées dans le dataframe des anciens logements. Pour éviter la redondance avec les deux précédentes, la variable 'surface_chauffee_installation_chauffage_n1' a été supprimée.
+
+
+#### 2. Variables catégorielles complexes
+* Dans les deux dataframe, la variable catégorielle 'type_energie_principale__chauffage' contient de trop nombreuses modalités, afin de réduire leur nombre elles ont été regroupées parmi celles-ci seulement : Gaz naturel, Electricité, Réseau de chauffage urbain, Bois et biomasse, Fioul, Gaz(GPL/Propane/Butane), Charbon.
+* La variable 'type_energie_n1' a été traitée de la même façon.
+* La variable 'configuration_installation_chauffage_n1' contenant beaucoup de modalités elle aussi, et s'avérant redondante avec les précédentes variables, a été supprimée afin d'éviter la multicolinéarité et de réduire le risque de surapprentissage par la suite.
+* La variable 'type_generateur_chauffage_principal' contient trop modalités, pour les mêmes raisons que précédemment elle a aussi été supprimée.
+
+
+#### 3. Variables géographiques
+La variable geopoint a été splittée en deux variables : latitude et longitude. 
+
+
+#### 4. Uniformisation des deux dataframes
+
+* Une colonne 'logement' a été ajoutée aux deux dataframes, pour l'un elle contient la valeur 'ancien', pour l'autre la valeur 'neuf'.
+* Une colonne 'période_construction' a aussi été créée dans le dataframe des logements neufs en y insérant la valeur 'après 2021' pour toutes les lignes.
