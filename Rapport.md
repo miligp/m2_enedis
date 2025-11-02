@@ -327,7 +327,7 @@ Rapport de classification :
 
 Le modèle obtenu est satisfaisant avec un F1-Score moyen égal à 0.75, la matrice de confusion correspondante se trouve ci-après.
 
-![jpeg](mat_confusion.jpeg)
+![jpeg](rapport_1_bis_files/mat_confusion.jpeg)
 
 #### 2. Régression logistique
 
