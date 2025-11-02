@@ -359,7 +359,7 @@ Le modèle obtenu est satisfaisant avec un F1-Score moyen égal à 0.75, que nou
 
 * Le modèle de **Régression Logistique** présente le **meilleur F1-score moyen** (0.7798).
 * Il est également **parfaitement stable** sur les 10 runs (Écart-type de 0.0), ce qui est un excellent indicateur de robustesse.
-* Le modèle **Random Forest** est moins performant en moyenne (0.7528) mais son score est également très stable (Écart-type de 0.0003).
+* Le modèle **Random Forest** est moins performant en moyenne (0.7528) mais est également très stable (Écart-type de 0.0003).
 
 ### Synthèse
 
