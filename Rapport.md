@@ -6,9 +6,14 @@ Ce rapport reprend les étapes principales de notre travail en expliquant, dans 
 ##  1. ACQUISITION ET TRAITEMENT DES DONNEES
 
 
-L'acquisition des données s'est faite depuis l'API de l'ADEME sous la forme de deux jeux de données, l'un contenant des informations sur les logements neufs et l'autre sur des logements anciens.
+* L'acquisition des données s'est faite depuis l'API de l'ADEME sous la forme de deux jeux de données, l'un contenant des informations sur les logements neufs et l'autre sur des logements anciens.
 Ces dataframes n'ayant pas la même structure, des transformations ont été effectuées disctinctement sur chaque dataframe dans un premier temps, elles seront abordées superficiellement dans un premier temps.
 Une fois les deux dataframes joints pour n'en former qu'un seul, d'autres transformations ont effectuées et seront davantage expliquées dans un second temps.
+
+* Afin de déterminer les variables requises dans cette étude, nous avons commencé par les classer comme suit : géographiques, types de chauffage, ECS (ce qui est relié à l'eau chaud), DPE-GES, logement, déperditions-isolation, autres.
+  Cela nous a permis d'effectuer une préselection des variables en suivant deux axes :
+  ** la variable sera-t-elle probante pour la création de nos modèles ?
+  ** l'utilisateur sera-t-il en mesure de renseigner facilement cette donnée ? (et si oui, comment?)
 
 ### A. Traitement avant concaténation
 #### 1. Valeurs manquantes
@@ -243,6 +248,80 @@ Nous avons commencé par chercher la meilleure valeur du coefficient de régular
 
 ### B. Modèle de classification : prévision de l'étiquette DPE
 
+#### 1. Random Forest
+
+Nous avons commencé par déterminer les meilleurs paramètres ('n_estimators': [100, 150, 200],'max_depth': [5, 10, None],'min_samples_split': [2, 5, 10]) à l'aide RandomizedSearchCV pour un échantillon de taille 50000 puis le test a été effectué sur l'échantillon complet.
+
+
+```text
+Processus d'Optimisation (Grid Search ou Random Search)
+Fitting 4 folds for each of 5 candidates, totalling 20 fits
+
+Meilleurs paramètres retenus pour l'estimateur (par exemple, Random Forest/Gradient Boosting)
+Meilleurs paramètres : {'n_estimators': 100, 'min_samples_split': 5, 'max_depth': None}
+
+Performance
+Score CV (sur échantillon) : 0.92749
+F1-score (sur jeu de test) : 0.93913
+
+Top 10 variables les plus importantes :
+                                 importance
+surface_habitable_logement        0.293281
+conso_5_usages_ef                 0.139925
+conso_5_usages_ef_energie_n1      0.130542
+cout_total_5_usages               0.115087
+cout_total_5_usages_energie_n1    0.113221
+qualite_isolation_murs            0.060687
+nombre_appartement_cat            0.022642
+hauteur_sous_plafond              0.022630
+logement_neuf                     0.022483
+type_energie_n1_gaz naturel       0.017938
+```
+
+On note ici un F1-score très elevé. Ceci s'explique par le fait que nous avions conservé les variables 'conso_5_usages_ef_energie_n1'  
+'cout_total_5_usages' et 'cout_total_5_usages_energie_n1', très corrélées à la variable 'conso_5_usages_ef'. Elles n'ont pas été retenues par la suite.
+
+
+
+```text
+
+Entraînement sur 10 runs...
+
+Run  1: F1-score = 0.7528
+Run  2: F1-score = 0.7526
+Run  3: F1-score = 0.7524
+Run  4: F1-score = 0.7528
+Run  5: F1-score = 0.7524
+Run  6: F1-score = 0.7529
+Run  7: F1-score = 0.7533
+Run  8: F1-score = 0.7528
+Run  9: F1-score = 0.7531
+Run 10: F1-score = 0.7527
+
+Moyenne des F1-scores : 0.7528
+Écart-type : 0.0003
+
+
+Rapport de classification :
+              precision    recall  f1-score   support
+
+            0       0.39      0.83      0.53      5453
+            1       0.42      0.73      0.53      9677
+            2       0.60      0.67      0.63     32202
+            3       0.78      0.65      0.71     60306
+            4       0.93      0.80      0.86     86398
+            5       0.64      0.90      0.75     10045
+            6       0.81      0.96      0.88      4533
+
+     accuracy                           0.74    208614
+    macro avg       0.65      0.79      0.70    208614
+ weighted avg       0.78      0.74      0.75    208614
+```
+
+Le modèle obtenu est satisfaisant avec un F1-Score moyen égal à 0.75, que nous comparerons à la régression logistique effectuée ci-après.
+
+#### 2. Régression logistique
+
     Fitting 2 folds for each of 5 candidates, totalling 10 fits
     Les meilleurs paramètres sont : {'penalty': 'l2', 'C': 10}
     
@@ -269,9 +348,19 @@ Nous avons commencé par chercher la meilleure valeur du coefficient de régular
      Écart-type : 0.0
     
 
+##### Comparaison des Performances F1-score (Stabilité sur 10 Runs)
 
+| Modèle | Moyenne des F1-scores | Écart-type |
+| :--- | :--- | :--- |
+| **Rando Forest** | 0.7528 | **0.0003** |
+| **Régression Logistique** | **0.7798** | 0.0 |
 
+---
 
+### Synthèse
+* Le modèle de **Régression Logistique** présente le **meilleur F1-score moyen** (0.7798).
+* Il est également **parfaitement stable** sur les 10 runs (Écart-type de 0.0), ce qui est un excellent indicateur de robustesse.
+* Le modèle **Random Forest** est moins performant en moyenne (0.7528) mais son score est également très stable (Écart-type de 0.0003).
 
 
 
