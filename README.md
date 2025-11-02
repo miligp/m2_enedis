@@ -21,21 +21,15 @@ Développer un modèle permettant de prédire la consommation énergétique fina
 L'installation requiert :
 - Python 3.8 (ou splus récent)
 - Un éditeur de code
-- Un environnement virtuel (recommandé)
+- Un environnement virtuel (recommandé) : voir le fichier requirements.txt
 
 ### Marche à suivre
 
-1. Cloner le repository :
+1. Lancer l'application :
 
-2. Créer un environnement virtuel :
+2. Fichier Docker : [Dockerfile](https://github.com/miligp/m2_enedis/blob/main/ml_project/Dockerfile)
 
-3. Installer les les packages de requirements.txt :
-
-4. Télécharger les modèles (indiquer chemin)
-
-5. Lancer l'application :
-   
-6. Suivre le lien :
+Pour des informations complémentaires, vous référez à la rubrique Documentation plus bas.
 
 
 ## UTILISATION
@@ -66,10 +60,10 @@ Pour installer les dépendances, il suffit d’exécuter la commande suivante :
 
 ## MODELES
 
-Vous pouvez les télécharger à partir du lien suivant et les placer dans le répertoire :
+Vous pouvez les télécharger à partir du lien suivant : [modèles](https://github.com/miligp/m2_enedis/tree/main/Modeles)
 
 
 ## DOCUMENTATION
 
-lien vers la doc technique
+Vous pouvez vous référer au document ce trouvant sur ce lien : [documentation](https://github.com/miligp/m2_enedis/blob/main/Documentation_Technique.md)
 
