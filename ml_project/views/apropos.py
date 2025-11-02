@@ -132,21 +132,25 @@ def show_page():
         </p>
     """, unsafe_allow_html=True)
 
-    # Objectifs futurs
+   # Objectifs futurs
     st.markdown("""
-        <h2 style='color:#f1c40f; text-align:center; font-weight:900; margin-top:50px;'>Objectifs futurs</h2>
-        <div style='color:var(--text-color-secondary); text-align:center; max-width:900px; margin:auto; line-height:1.6;'>
-            Les prochaines évolutions d’<b>EcoScan Dashboard</b> visent à renforcer ses capacités d’analyse et d’intelligence.<br><br>
-            • Amélioration du modèle prédictif grâce à l’intégration de nouvelles variables issues de données ouvertes 
-            (température, climat, type de chauffage).<br>
+    <h2 style='color:#f1c40f; text-align:center; font-weight:900; margin-top:50px;'>Objectifs futurs</h2>
+    <div style='color:var(--text-color-secondary); text-align:center; max-width:900px; margin:auto; line-height:1.6;'>
+        Les prochaines évolutions d'<b>EcoScan Dashboard</b> visent à renforcer ses capacités d'analyse et d'intelligence.
+        <br><br>
+        <div style='text-align:left; display:inline-block;'>
+            • Amélioration du modèle prédictif grâce à l'intégration de nouvelles variables issues de données ouvertes <br>
+            &nbsp;&nbsp;&nbsp;(température, climat, type de chauffage).<br>
             • Actualisation automatique des données via une API pour maintenir les visualisations à jour en temps réel.<br>
-            • Réentraînement du modèle lorsque de nouvelles données sont disponibles afin d’améliorer la précision des prédictions.<br>
-            • Mise en ligne de la plateforme pour permettre un accès public et faciliter le partage des résultats.<br><br>
-            À terme, <b>EcoScan</b> ambitionne de devenir un outil intelligent et connecté, 
-            capable de suivre en continu la performance énergétique des logements 
-            et d’accompagner les utilisateurs dans leurs décisions.
+            • Réentraînement du modèle lorsque de nouvelles données sont disponibles afin d'améliorer la précision des prédictions.<br>
+            • Mise en ligne de la plateforme pour permettre un accès public et faciliter le partage des résultats.
         </div>
-    """, unsafe_allow_html=True)
+        <br><br>
+        À terme, <b>EcoScan</b> ambitionne de devenir un outil intelligent et connecté, 
+        capable de suivre en continu la performance énergétique des logements 
+        et d'accompagner les utilisateurs dans leurs décisions.
+    </div>
+""", unsafe_allow_html=True)
 
     # Liens utiles 
     st.markdown("""
