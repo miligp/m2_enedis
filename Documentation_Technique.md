@@ -36,9 +36,11 @@ ml_project/
 │   └── contexte.py         # EXPLICATIONS PRÉDICTIONS
 └── streamlit/              # CONFIGURATION STREAMLIT
     └── config.toml         # THÈME ET PARAMÈTRES
+```
 
 ### Schéma Architecture
 
+```bash
 ┌─────────────────────────────────────────────────┐
 │                 UTILISATEUR                     │
 └─────────────────────────┬───────────────────────┘
@@ -60,7 +62,7 @@ ml_project/
 │ RANDOM FOREST │                   │ RÉGRESSION      │
 │   (API)       │                   │ LINÉAIRE (API)  │
 └───────────────┘                   └─────────────────┘
-
+```
 
 ## 2. 📦 Prérequis et Guide d'Installation
 
@@ -83,14 +85,21 @@ Les dépendances sont listées dans `requirements.txt` et sont gérées automati
 
 Cette méthode ne nécessite pas le code source du projet.
 
-```bash
+
 # 1. Télécharger l'image
+
+```bash
 docker pull miligp12/ml-project-streamlit:latest
+```
 
 # 2. Lancer l'application
+
+```bash
 docker run -d -p 8501:8501 miligp12/ml-project-streamlit:latest
+```
 
 # 3. Accéder à l'application
+
 # Ouvrir un navigateur web à l'adresse : http://localhost:8501
 
 #### B. 🔧 Installation à partir du Code Source (Développement/Docker Compose)
@@ -98,17 +107,28 @@ docker run -d -p 8501:8501 miligp12/ml-project-streamlit:latest
 Cette méthode permet de reconstruire l'environnement pour le développement.
 
 # 1. Clonage du Dépôt et Navigation
+
+```bash
 git clone https://github.com/miligp/m2_enedis.git
+```
+```bash
 cd m2_enedis
+```
+
 
 # 2. Lancement (Build & Run)
 # La commande suivante construit l'image et démarre le service en arrière-plan
+
+```bash
 docker-compose up --build -d
+```
 
 # 3. Accès à l'application
 # Ouvrir un navigateur web à l'adresse : http://localhost:8501
 
 ### Schéma de Déploiement Docker
+
+```bash
 ┌─────────────────────────────────────────┐
 │           MACHINE HÔTE                  │
 │                                         │
@@ -134,9 +154,11 @@ docker-compose up --build -d
 │        NAVIGATEUR WEB                   │
 │      http://localhost:8501              │
 └─────────────────────────────────────────┘
+```
 
 ## 3. 🌐 Accès Public (Streamlit Cloud)
 #### C. 🚀 Déploiement Cloud Public
+
 L'application est également déployée publiquement et accessible sans installation :
 
 URL Streamlit Cloud :
