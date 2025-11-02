@@ -99,10 +99,28 @@ def show_page():
         <h1 style='text-align:center; font-size:42px; font-weight:900;'>
             <span style='color:#2ecc71;'>Analyse descriptive</span> <span style='color:#f1c40f;'>des données DPE</span>
         </h1>
-        <p style='text-align:center; color:#bbbbbb; font-style:italic;'>
+        <p style='text-align:center; color:var(--text-color); font-style:italic;'>
             Explorer les indicateurs statistiques de chaque variable du dataset
         </p>
-        <hr style='border:1px solid #333; width:80%; margin:auto; margin-bottom:20px;'>
+        <hr style='border:1px solid var(--border-color); width:80%; margin:auto; margin-bottom:20px;'>
+        
+        <style>
+            :root {{
+                --text-color: #bbbbbb;
+                --text-color-secondary: #cccccc;
+                --border-color: #333;
+                --card-bg: rgba(255,255,255,0.04);
+            }}
+            
+            @media (prefers-color-scheme: light) {{
+                :root {{
+                    --text-color: #333333;
+                    --text-color-secondary: #555555;
+                    --border-color: #dddddd;
+                    --card-bg: rgba(0,0,0,0.05);
+                }}
+            }}
+        </style>
         """,
         unsafe_allow_html=True
     )
@@ -117,7 +135,7 @@ def show_page():
         button[data-baseweb="tab"] {
             font-weight: 700 !important;
             font-size: 20px !important;
-            color: #dddddd !important;
+            color: var(--text-color) !important;
             border: none !important;
             background: transparent !important;
         }
@@ -129,12 +147,12 @@ def show_page():
             border-bottom: 3px solid #e74c3c !important;
         }
         .stat-box {
-            border: 2.5px solid rgba(255,255,255,0.15);
+            border: 2.5px solid var(--border-color);
             border-radius: 18px;
             padding: 18px 10px;
             margin: 10px;
             text-align: center;
-            background-color: rgba(255,255,255,0.04);
+            background-color: var(--card-bg);
             min-height: 120px;
             display: flex;
             flex-direction: column;
@@ -246,10 +264,10 @@ def show_page():
             
             col8.markdown("", unsafe_allow_html=True)
 
-            st.markdown("<hr style='border:1px solid rgba(255,255,255,0.1); margin-top:25px;'>", unsafe_allow_html=True)
+            st.markdown("<hr style='border:1px solid var(--border-color); margin-top:25px;'>", unsafe_allow_html=True)
 
             st.markdown(
-                f"<p style='text-align:center; color:#999; font-style:italic; margin-top:-10px;'>"
+                f"<p style='text-align:center; color:var(--text-color); font-style:italic; margin-top:-10px;'>"
                 f"Nombre total d'observations : <b>{int(row['count'])}</b></p>",
                 unsafe_allow_html=True
             )
@@ -260,7 +278,7 @@ def show_page():
         <h2 style='text-align:center; color:#f1c40f; font-size:30px; font-weight:900; margin-top:60px;'>
             🎛 Filtres & sous-échantillons de logements
         </h2>
-        <p style='text-align:center; color:#bbbbbb; font-style:italic; max-width:900px; margin: 0 auto 30px;'>
+        <p style='text-align:center; color:var(--text-color); font-style:italic; max-width:900px; margin: 0 auto 30px;'>
             Création de sous-populations intéressantes pour l'analyse énergétique
         </p>
         """,
@@ -350,7 +368,7 @@ def show_page():
 
     st.markdown(
         f"""
-        <p style='text-align:center; color:#bbbbbb; font-size:15px; max-width:800px; margin:10px auto 20px;'>
+        <p style='text-align:center; color:var(--text-color); font-size:15px; max-width:800px; margin:10px auto 20px;'>
             Sous-échantillon : <b style="color:#f1c40f;">{choix_subset}</b><br>
             {subset.shape[0]} logements correspondants
         </p>
@@ -361,7 +379,7 @@ def show_page():
     st.dataframe(subset, use_container_width=True, height=300)
 
     st.markdown(
-        "<hr style='border:1px solid rgba(255,255,255,0.1); margin-top:35px; margin-bottom:35px;'>",
+        "<hr style='border:1px solid var(--border-color); margin-top:35px; margin-bottom:35px;'>",
         unsafe_allow_html=True
     )
 
@@ -370,7 +388,7 @@ def show_page():
         <h2 style='text-align:center; color:#2ecc71; font-size:30px; font-weight:800; margin-top:40px;'>
             📊 Visualisations statistiques interactives
         </h2>
-        <p style='text-align:center; color:#bbbbbb; max-width:900px; margin: 0 auto 25px auto;'>
+        <p style='text-align:center; color:var(--text-color); max-width:900px; margin: 0 auto 25px auto;'>
             Exploration graphique complète des distributions et relations clés entre variables énergétiques
         </p>
     """, unsafe_allow_html=True)

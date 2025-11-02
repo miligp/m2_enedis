@@ -97,10 +97,28 @@ def show_page():
             <span style='color:#28b463;'> × </span>
             <span style='color:#3498db;'>Enedis</span>
         </h1>
-        <p style='text-align:center; font-size:18px; color:#bbbbbb; font-style:italic; margin-top:-5px;'>
+        <p style='text-align:center; font-size:18px; color:var(--text-color); font-style:italic; margin-top:-5px;'>
             Évaluer et comprendre la performance énergétique des logements français
         </p>
-        <hr style='border: 1px solid #333; margin-top:5px; margin-bottom:25px; width:80%; margin-left:auto; margin-right:auto;'>
+        <hr style='border: 1px solid var(--border-color); margin-top:5px; margin-bottom:25px; width:80%; margin-left:auto; margin-right:auto;'>
+        
+        <style>
+            :root {{
+                --text-color: #bbbbbb;
+                --text-color-secondary: #cccccc;
+                --border-color: #333;
+                --card-bg: rgba(255,255,255,0.05);
+            }}
+            
+            @media (prefers-color-scheme: light) {{
+                :root {{
+                    --text-color: #333333;
+                    --text-color-secondary: #555555;
+                    --border-color: #dddddd;
+                    --card-bg: rgba(0,0,0,0.05);
+                }}
+            }}
+        </style>
         """,
         unsafe_allow_html=True
     )
@@ -110,7 +128,7 @@ def show_page():
         <h2 style='color:#2ecc71; font-size:32px; font-weight:1000; margin-bottom:10px;'>
            Contexte du Projet
         </h2>
-        <p style='font-size:20px; color:#dddddd; line-height:1.5;'>
+        <p style='font-size:20px; color:var(--text-color-secondary); line-height:1.5;'>
             Avec l'accélération du changement climatique et la hausse du coût de l'énergie,
             la <b>sobriété énergétique</b> est devenue un enjeu central.<br>
             Enedis souhaite évaluer <b>l'impact de la classe DPE</b> (Diagnostic de Performance Énergétique)
@@ -125,7 +143,7 @@ def show_page():
         <h4 style='color:#2ecc71; font-size:28px; margin-bottom:10px; font-weight:800;'>
             OBJECTIFS
         </h4>
-        <ul style='list-style:none; padding-left:0; font-size:19px; color:#e6e6e6; line-height:1.9;'>
+        <ul style='list-style:none; padding-left:0; font-size:19px; color:var(--text-color-secondary); line-height:1.9;'>
             <li style='margin-bottom:5px;'>• <b>Visualiser et explorer</b> les données du DPE</li>
             <li style='margin-bottom:5px;'>• <b>Analyser</b> les tendances énergétiques régionales</li>
             <li>• <b>Prédire</b> la classe DPE et la consommation d'énergie d'un logement</li>
@@ -179,7 +197,7 @@ def show_page():
 
         box_style = """
             <div style="
-                border: 3px solid rgba(255,255,255,0.2);
+                border: 3px solid var(--border-color);
                 border-radius: 15px;
                 padding: 18px;
                 margin: 10px;
@@ -188,10 +206,10 @@ def show_page():
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
-                background-color: rgba(255,255,255,0.05);
+                background-color: var(--card-bg);
                 width: 100%;
             ">
-                <h4 style="color:#f8f9f9; font-size:17px; margin-bottom:10px; font-weight:600;">{}</h4>
+                <h4 style="color:var(--text-color-secondary); font-size:17px; margin-bottom:10px; font-weight:600;">{}</h4>
                 <p style="color:{}; font-size:24px; font-weight:800; margin:0;">{}</p>
             </div>
         """
@@ -230,7 +248,7 @@ def show_page():
             title=dict(text="Répartition des classes DPE", x=0.5, font=dict(color="#2ecc71", size=18)),
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#ffffff"),
+            font=dict(color="white"),
             xaxis_title="Classe DPE",
             yaxis_title="Nombre de logements",
             margin=dict(l=20, r=20, t=50, b=40),
