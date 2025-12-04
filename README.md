@@ -52,7 +52,7 @@ Une fois installée, l'application est prête à l'emploi. Ses principales fonct
 
 - Carte interactive : Visualiser et explorer les données relatives aux bâtiments et à leurs profils énergétiques sur une carte du département du Rhône (69).
 
-- Graphiques et tableaux : Explorer différentes informations grâce à des graphiques et tableaux interactifs.
+- Graphiques et tableaux : Explorer différentes informations grâce à des graphiques et des tableaux interactifs.
 
 ## PACKAGES 
 
